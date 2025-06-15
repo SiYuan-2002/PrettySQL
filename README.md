@@ -32,6 +32,12 @@ PrettySQL 是一款基于 IntelliJ IDEA 的轻量级插件，致力于提升 SQL
 
 3.选择xml文件里的sql语句右键SQL检查(DML事务不会提交)
 
+🎉 加入我们
+PrettySQL 还在持续更新中，本项目欢迎您的参与，共同维护，逐步完善，将项目做得更强。项目采用 AGPL-3.0 开源协议，本着一切免费的原则，原则上不会收取任何费用及版权，可以放心使用。
+
+如果你想加入我们，可以多提供一些好的建议或者提交 pr，我们将会非常乐意接受您的建议和意见。
+
+
 
 <div style="display: flex; gap: 15px; align-items: flex-start;">
   <img src="https://znunwm.top/upload/2025/06/0bd6f2af-fb94-4b1e-bf83-490528dfe017.png" width="400" height="300" />

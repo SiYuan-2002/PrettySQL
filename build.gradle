@@ -33,6 +33,8 @@ intellij {
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
     options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation', '-parameters']
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
 }
 
 patchPluginXml {

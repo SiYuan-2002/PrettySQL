@@ -153,7 +153,6 @@ public class DbConfigUtil {
         promptUserAddInternal(project, callback);
     }
 
-
     /**
      * 配置默认数据源
      *
@@ -164,6 +163,8 @@ public class DbConfigUtil {
         ApplicationManager.getApplication().invokeLater(() -> {
             List<DbConfig> configs = new ArrayList<>();
             Path path = Paths.get(project.getBasePath(), CONFIG_PATH_ALL);
+
+            // 读取配置文件
             if (Files.exists(path)) {
                 try {
                     String json = Files.readString(path, StandardCharsets.UTF_8);
@@ -175,6 +176,7 @@ public class DbConfigUtil {
                 }
             }
 
+            // 分组
             Map<String, List<DbConfig>> typeToConfigs = configs.stream()
                     .filter(c -> c.getUrl() != null)
                     .collect(Collectors.groupingBy(c -> parseDbType(c.getUrl())));
@@ -183,26 +185,26 @@ public class DbConfigUtil {
                 typeToConfigs.put("mysql", List.of(new DbConfig(DEFAULT_MYSQL, "", "")));
             }
 
-            // 数据库类型下拉框
+            // UI组件
             String[] dbTypes = typeToConfigs.keySet().toArray(new String[0]);
             JComboBox<String> dbTypeComboBox = new JComboBox<>(dbTypes);
-
-            // 配置列表下拉框（如多个 mysql 配置）
             JComboBox<String> configComboBox = new JComboBox<>();
-
             JTextField urlField = new JTextField();
             JTextField usernameField = new JTextField();
             JPasswordField passwordField = new JPasswordField();
 
-            // 工具方法：刷新 configComboBox
+            // 删除按钮（➖）
+            JButton deleteButton = new JButton("➖");
+            deleteButton.setToolTipText("删除当前数据源");
+            deleteButton.setPreferredSize(new Dimension(45, 24));
+
+            // 刷新配置列表下拉框
             Runnable refreshConfigList = () -> {
                 configComboBox.removeAllItems();
                 String selectedType = (String) dbTypeComboBox.getSelectedItem();
                 if (selectedType != null && typeToConfigs.containsKey(selectedType)) {
                     List<DbConfig> list = typeToConfigs.get(selectedType);
-                    for (int i = 0; i < list.size(); i++) {
-                        DbConfig cfg = list.get(i);
-                        // 下拉项显示 URL（也可以自定义 getName()）
+                    for (DbConfig cfg : list) {
                         configComboBox.addItem(cfg.getUrl());
                     }
                     if (!list.isEmpty()) {
@@ -215,14 +217,44 @@ public class DbConfigUtil {
                 }
             };
 
-            // 监听数据库类型切换
-            dbTypeComboBox.addActionListener(e -> refreshConfigList.run());
+            // 删除按钮逻辑
+            deleteButton.addActionListener(e -> {
+                String selectedType = (String) dbTypeComboBox.getSelectedItem();
+                int selectedIndex = configComboBox.getSelectedIndex();
 
-            // 监听配置选择切换
+                if (selectedType != null && selectedIndex >= 0 && typeToConfigs.containsKey(selectedType)) {
+                    List<DbConfig> list = typeToConfigs.get(selectedType);
+                    if (selectedIndex >= list.size()) return;
+                    DbConfig toRemove = list.get(selectedIndex);
+
+                    int confirm = JOptionPane.showConfirmDialog(null,
+                            "确认删除该数据源配置？\n" + toRemove.getUrl(),
+                            "确认删除", JOptionPane.YES_NO_OPTION);
+
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        list.remove(selectedIndex);
+
+                        // 写回 JSON 文件
+                        try {
+                            List<DbConfig> allConfigs = typeToConfigs.values().stream()
+                                    .flatMap(Collection::stream).collect(Collectors.toList());
+                            String newJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(allConfigs);
+                            Files.writeString(path, newJson, StandardCharsets.UTF_8);
+                        } catch (IOException ex) {
+                            Messages.showErrorDialog(project, "写入配置文件失败: " + ex.getMessage(), SQL_ERROR_TITLE);
+                        }
+
+                        refreshConfigList.run();
+                    }
+                }
+            });
+
+            // 监听选择变化
+            dbTypeComboBox.addActionListener(e -> refreshConfigList.run());
             configComboBox.addActionListener(e -> {
                 String selectedType = (String) dbTypeComboBox.getSelectedItem();
                 int idx = configComboBox.getSelectedIndex();
-                if (selectedType != null && typeToConfigs.containsKey(selectedType) && idx >= 0) {
+                if (selectedType != null && idx >= 0 && typeToConfigs.containsKey(selectedType)) {
                     List<DbConfig> list = typeToConfigs.get(selectedType);
                     if (idx < list.size()) {
                         DbConfig selected = list.get(idx);
@@ -233,16 +265,23 @@ public class DbConfigUtil {
                 }
             });
 
-            // 初始化默认选择
+            // 初始化
             dbTypeComboBox.setSelectedIndex(0);
             refreshConfigList.run();
 
+            // 构造 UI 面板
             JPanel panel = new JPanel(new GridLayout(0, 1));
             panel.setPreferredSize(new Dimension(500, 300));
             panel.add(new JLabel("数据库类型:"));
             panel.add(dbTypeComboBox);
             panel.add(new JLabel("具体配置:"));
-            panel.add(configComboBox);
+
+            // 下拉框和删除按钮放一行
+            JPanel configLine = new JPanel(new BorderLayout());
+            configLine.add(configComboBox, BorderLayout.CENTER);
+            configLine.add(deleteButton, BorderLayout.EAST);
+            panel.add(configLine);
+
             panel.add(new JLabel("数据库 URL:"));
             panel.add(urlField);
             panel.add(new JLabel("用户名:"));
@@ -250,6 +289,7 @@ public class DbConfigUtil {
             panel.add(new JLabel("密码:"));
             panel.add(passwordField);
 
+            // 循环弹窗
             while (true) {
                 int result = JOptionPane.showConfirmDialog(
                         null,
@@ -259,9 +299,7 @@ public class DbConfigUtil {
                         JOptionPane.PLAIN_MESSAGE
                 );
 
-                if (result != JOptionPane.OK_OPTION) {
-                    break;
-                }
+                if (result != JOptionPane.OK_OPTION) break;
 
                 String dbType = ((String) dbTypeComboBox.getSelectedItem()).toLowerCase();
                 String url = urlField.getText().trim();
@@ -269,15 +307,9 @@ public class DbConfigUtil {
                 String password = new String(passwordField.getPassword()).trim();
 
                 List<String> errorList = new ArrayList<>();
-                if (!StringUtils.notBlankAndNotNullStr(url)) {
-                    errorList.add("数据库 URL");
-                }
-                if (!StringUtils.notBlankAndNotNullStr(username)) {
-                    errorList.add("用户名");
-                }
-                if (!StringUtils.notBlankAndNotNullStr(dbType)) {
-                    errorList.add("数据库类型");
-                }
+                if (!StringUtils.notBlankAndNotNullStr(url)) errorList.add("数据库 URL");
+                if (!StringUtils.notBlankAndNotNullStr(username)) errorList.add("用户名");
+                if (!StringUtils.notBlankAndNotNullStr(dbType)) errorList.add("数据库类型");
 
                 if (errorList.isEmpty()) {
                     if (DataSourceConstants.DB_TYPE_MYSQL.equals(dbType) && !url.endsWith(URL_FIX)) {
@@ -293,6 +325,7 @@ public class DbConfigUtil {
             }
         });
     }
+
 
 
     private static void promptUserInputInternal(Project project, Consumer<DbConfig> callback) {

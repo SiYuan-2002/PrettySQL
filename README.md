@@ -20,7 +20,7 @@ PrettySQL 是一款基于 IntelliJ IDEA 的轻量级插件，致力于提升 SQL
 更多功能，请到[文档中心](http://czh.znunwm.top/)的项目主页进行了解。
 
 
-### 2.1 引入PrettySQL插件(暂时只支持IntelliJ IDEA 2024.1.4之前版本)
+### 2.1 引入PrettySQL插件(暂时只支持IntelliJ IDEA 2019.2.4之前版本)
 
 在 IntelliJ IDEA 中打开插件市场，搜索 "PrettySQL" 并安装 [离线手动安装](https://github.com/SiYuan-2002/PrettySQL/releases/tag/1.4)。
 

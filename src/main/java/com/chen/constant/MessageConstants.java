@@ -15,6 +15,7 @@ public class MessageConstants {
     public static final String SQL_ERROR_TITLE_CONNECTION_FAIL = "连接失败";
     public static final String SQL_ERROR_TITLE = "错误";
     public static final String SQL_ERROR_SYNTAX = "SQL语法检查";
+    public static final String NOT_IN_SCOPE = "不在文件规定范围";
     public static final String SQL_WARNING_DANGER = "SQL危险检测";
     public static final String SQL_SUCCESS = "SQL语句语法正确";
     public static final String SQL_SUCCESS_TITLE = "SQL检查";

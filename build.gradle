@@ -26,7 +26,7 @@ dependencies {
     implementation 'com.oracle:ojdbc6:11.2.0.4'
 }
 intellij {
-    version = '2024.1.4'
+    version = '2024.3.2'
     type = 'IU'
 }
 
@@ -39,6 +39,6 @@ tasks.withType(JavaCompile) {
 
 patchPluginXml {
     //注意这个版本号不能高于上面intellij的version,否则runIde会报错
-    sinceBuild = '171'
-    untilBuild = '243.*'
+    sinceBuild = '192'
+    untilBuild = '252.*'
 }

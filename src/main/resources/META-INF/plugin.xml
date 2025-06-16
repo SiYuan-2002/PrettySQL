@@ -9,7 +9,7 @@
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="2766694258@qq.com" url="https://znunwm.top">陈思源</vendor>
-    <idea-version since-build="171" until-build="243.*"/>
+    <idea-version since-build="192" until-build="252.*"/>
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
@@ -25,8 +25,16 @@ PrettySQL is an IntelliJ plugin that beautifies and formats SQL queries automati
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <documentationProvider language="XML" implementationClass="com.chen.action.SqlTableDocumentationProvider"/>
+        <documentationProvider implementation="com.chen.action.SqlTableDocumentationProvider"/>
     </extensions>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <lang.documentationProvider
+                language="XML"
+                implementationClass="com.chen.action.SqlTableDocumentationProvider" />
+    </extensions>
+
+
     <actions>
         <action id="PrettySqlAction"
                 class="com.chen.action.PrettySqlAction"

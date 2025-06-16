@@ -2,9 +2,12 @@ package com.chen.action;
 import com.chen.entity.ColumnMeta;
 import com.chen.entity.DbConfig;
 import com.chen.utils.JdbcTableInfoUtil;
+import com.intellij.lang.documentation.AbstractDocumentationProvider;
 import com.intellij.lang.documentation.DocumentationProvider;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.xml.XmlText;
 import com.intellij.psi.xml.XmlToken;
 import org.jetbrains.annotations.Nullable;
@@ -13,10 +16,12 @@ import java.nio.file.Paths;
 
 import java.util.List;
 
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.chen.constant.FileConstant.CONFIG_PATH;
+import static com.chen.constant.FileConstant.XML;
 import static com.chen.constant.MessageConstants.*;
 import static com.chen.utils.DbConfigUtil.*;
 import static com.chen.utils.JdbcTableInfoUtil.testConnection;
@@ -25,7 +30,7 @@ import static com.chen.utils.JdbcTableInfoUtil.testConnection;
  * SQL 表结构文档展示提供器：支持在 IntelliJ 中对 SQL 中的表名悬停显示结构
  * 自动从 application.yml / application-dev.yml 中提取数据库连接配置并通过 JDBC 获取表字段元数据
  */
-public class SqlTableDocumentationProvider implements DocumentationProvider {
+public class SqlTableDocumentationProvider extends AbstractDocumentationProvider {
 
 
     /**
@@ -33,6 +38,16 @@ public class SqlTableDocumentationProvider implements DocumentationProvider {
      */
     @Override
     public @Nullable String generateDoc(PsiElement element, @Nullable PsiElement originalElement) {
+        String extension = Optional.ofNullable(element.getContainingFile())
+                .map(PsiFile::getVirtualFile)
+                .map(VirtualFile::getExtension)
+                .orElse("");
+
+        if (!XML.equalsIgnoreCase(extension)) {
+            return NOT_IN_SCOPE;
+        }
+
+
         String tableName = extractTableName(element);
         if (tableName == null) {
             return null;
@@ -75,10 +90,6 @@ public class SqlTableDocumentationProvider implements DocumentationProvider {
         return buildHtmlTable(tableName, columns);
     }
 
-    @Override
-    public @Nullable List<String> getUrlFor(PsiElement element, @Nullable PsiElement originalElement) {
-        return null;
-    }
 
     /**
      * 构建表结构的 HTML 表格展示
@@ -86,7 +97,7 @@ public class SqlTableDocumentationProvider implements DocumentationProvider {
     private String buildHtmlTable(String tableName, List<ColumnMeta> columns) {
         StringBuilder html = new StringBuilder();
         html.append("<style>")
-                .append(".db-table { width:100%; border-collapse:collapse; font-family:'Segoe UI',Arial,sans-serif; background:#23272f; border-radius:10px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.40); }")
+                .append(".db-table { width:100%; border-collapse:collapse; font-family:'Segoe UI',Arial,sans-serif; background:#23272f; border: 1px solid #444b58; }")
                 .append(".db-table th, .db-table td { border:1px solid #444b58; padding:10px 8px; color:#d8dee9; text-align:center; vertical-align:middle; }")
                 .append(".db-table th { background:linear-gradient(90deg,#34495e 0%,#23272f 100%); font-weight:600; font-size:15px; }")
                 .append(".db-table td { background:#23272f; font-size:14px; }")

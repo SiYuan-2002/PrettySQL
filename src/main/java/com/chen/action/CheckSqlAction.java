@@ -19,7 +19,7 @@ import static com.chen.utils.JdbcTableInfoUtil.testConnection;
 /**
  * @author czh
  * @version 1.0
- * @description:
+ * @description: SQL语法检查操作类
  * @date 2025/6/13 14:29
  */
 
@@ -62,12 +62,20 @@ public class CheckSqlAction extends AnAction {
 
         DbConfig dbConfig = dbConfigOpt.get();
 
-        if (!testConnection(dbConfig)) {
+        try {
+            if (!testConnection(dbConfig)) {
+                Messages.showErrorDialog(e.getProject(),
+                        MessageConstants.SQL_ERROR_CONNECTION_FAIL,
+                        MessageConstants.SQL_ERROR_TITLE_CONNECTION_FAIL);
+                return;
+            }
+        } catch (Exception ex) {
             Messages.showErrorDialog(e.getProject(),
-                    MessageConstants.SQL_ERROR_CONNECTION_FAIL,
+                    "数据库连接异常：" + ex.getMessage(),
                     MessageConstants.SQL_ERROR_TITLE_CONNECTION_FAIL);
             return;
         }
+
 
         saveToCache(e.getProject(), dbConfig);
 

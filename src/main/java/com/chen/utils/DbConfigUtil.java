@@ -1,5 +1,6 @@
 package com.chen.utils;
 
+import A.k.E;
 import com.chen.constant.DataSourceConstants;
 import com.chen.entity.DbConfig;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -28,6 +29,7 @@ import static com.chen.constant.DbConstant.*;
 import static com.chen.constant.FileConstant.CONFIG_PATH;
 import static com.chen.constant.FileConstant.CONFIG_PATH_ALL;
 import static com.chen.constant.MessageConstants.*;
+import static com.chen.utils.DataSourceUrlFixer.appendUrlFix;
 
 /**
  * @author czh
@@ -85,6 +87,7 @@ public class DbConfigUtil {
 
                 if (StringUtils.notBlankAndNotNullStr(url) && StringUtils.notBlankAndNotNullStr(username)) {
                     dbConfig = new DbConfig(url, username, password);
+                    saveToCacheAppend(project, dbConfig);
                     break;
                 }
             } catch (Exception ignored) {
@@ -92,10 +95,10 @@ public class DbConfigUtil {
         }
 
 
-         if (dbConfig!=null){
-             saveToCacheAppend(project, dbConfig);
-             saveToCache(project, dbConfig);
-         }
+        if (dbConfig != null) {
+            saveToCacheAppend(project, dbConfig);
+            saveToCache(project, dbConfig);
+        }
 
         return dbConfig;
     }
@@ -169,7 +172,8 @@ public class DbConfigUtil {
                 try {
                     String json = Files.readString(path, StandardCharsets.UTF_8);
                     if (json != null && !json.isBlank()) {
-                        configs = objectMapper.readValue(json, new TypeReference<List<DbConfig>>() {});
+                        configs = objectMapper.readValue(json, new TypeReference<List<DbConfig>>() {
+                        });
                     }
                 } catch (IOException e) {
                     Messages.showErrorDialog(project, "读取数据库配置文件失败: " + e.getMessage(), "错误");
@@ -312,9 +316,7 @@ public class DbConfigUtil {
                 if (!StringUtils.notBlankAndNotNullStr(dbType)) errorList.add("数据库类型");
 
                 if (errorList.isEmpty()) {
-                    if (DataSourceConstants.DB_TYPE_MYSQL.equals(dbType) && !url.endsWith(URL_FIX)) {
-                        url += URL_FIX;
-                    }
+                    url += appendUrlFix(parseDbType(url), url);
                     callback.accept(new DbConfig(url, username, password));
                     break;
                 } else {
@@ -325,7 +327,6 @@ public class DbConfigUtil {
             }
         });
     }
-
 
 
     private static void promptUserInputInternal(Project project, Consumer<DbConfig> callback) {
@@ -344,44 +345,41 @@ public class DbConfigUtil {
             panel.add(passwordField);
 
 
-               int result = JOptionPane.showConfirmDialog(
-                        null,
-                        panel,
-                        "请输入数据库配置",
-                        JOptionPane.OK_CANCEL_OPTION,
-                        JOptionPane.PLAIN_MESSAGE
-                );
+            int result = JOptionPane.showConfirmDialog(
+                    null,
+                    panel,
+                    "请输入数据库配置",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.PLAIN_MESSAGE
+            );
 
 
             if (result != JOptionPane.OK_OPTION) {
                 // 用户点击了“取消”或关闭了窗口，直接返回，不继续执行下面的逻辑
                 return;
             }
-                String url = urlField.getText().trim();
-                String username = usernameField.getText().trim();
-                String password = new String(passwordField.getPassword()).trim();
+            String url = urlField.getText().trim();
+            String username = usernameField.getText().trim();
+            String password = new String(passwordField.getPassword()).trim();
 
-                List<String> errorList = new ArrayList<>();
-                if (!StringUtils.notBlankAndNotNullStr(url)) {
-                    errorList.add("数据库 URL");
-                }
-                if (!StringUtils.notBlankAndNotNullStr(username)) {
-                    errorList.add("用户名");
-                }
+            List<String> errorList = new ArrayList<>();
+            if (!StringUtils.notBlankAndNotNullStr(url)) {
+                errorList.add("数据库 URL");
+            }
+            if (!StringUtils.notBlankAndNotNullStr(username)) {
+                errorList.add("用户名");
+            }
 
-                if (errorList.isEmpty()) {
-                    String dbType = parseDbType(url);
-                    if (DataSourceConstants.DB_TYPE_MYSQL.equals(dbType)) {
-                        url += URL_FIX;
-                    }
-                    callback.accept(new DbConfig(url, username, password));
-                    saveToCache(project, new DbConfig(url, username, password));
-                    saveToCacheAppend(project, new DbConfig(url, username, password));
-                } else {
-                    Messages.showErrorDialog(project,
-                            "以下字段不能为空：\n" + String.join("、", errorList),
-                            "输入不完整");
-                }
+            if (errorList.isEmpty()) {
+                url += appendUrlFix(parseDbType(url), url);
+                callback.accept(new DbConfig(url, username, password));
+                saveToCache(project, new DbConfig(url, username, password));
+                saveToCacheAppend(project, new DbConfig(url, username, password));
+            } else {
+                Messages.showErrorDialog(project,
+                        "以下字段不能为空：\n" + String.join("、", errorList),
+                        "输入不完整");
+            }
 
         });
     }
@@ -402,42 +400,40 @@ public class DbConfigUtil {
             panel.add(new JLabel("密码:"));
             panel.add(passwordField);
 
-            int result =JOptionPane.showConfirmDialog(
-                        null,
-                        panel,
-                        "请输入数据库配置",
-                        JOptionPane.OK_CANCEL_OPTION,
-                        JOptionPane.PLAIN_MESSAGE
-                );
+            int result = JOptionPane.showConfirmDialog(
+                    null,
+                    panel,
+                    "请输入数据库配置",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.PLAIN_MESSAGE
+            );
             if (result != JOptionPane.OK_OPTION) {
                 // 用户点击了“取消”或关闭了窗口，直接返回，不继续执行下面的逻辑
                 return;
             }
-                String url = urlField.getText().trim();
-                String username = usernameField.getText().trim();
-                String password = new String(passwordField.getPassword()).trim();
+            String url = urlField.getText().trim();
+            String username = usernameField.getText().trim();
+            String password = new String(passwordField.getPassword()).trim();
 
-                List<String> errorList = new ArrayList<>();
-                if (!StringUtils.notBlankAndNotNullStr(url)) {
-                    errorList.add("数据库 URL");
-                }
-                if (!StringUtils.notBlankAndNotNullStr(username)) {
-                    errorList.add("用户名");
-                }
+            List<String> errorList = new ArrayList<>();
+            if (!StringUtils.notBlankAndNotNullStr(url)) {
+                errorList.add("数据库 URL");
+            }
+            if (!StringUtils.notBlankAndNotNullStr(username)) {
+                errorList.add("用户名");
+            }
 
-                if (errorList.isEmpty()) {
-                    String dbType = parseDbType(url);
-                    if (DataSourceConstants.DB_TYPE_MYSQL.equals(dbType)) {
-                        url += URL_FIX;
-                    }
-                    callback.accept(new DbConfig(url, username, password));
-                    saveToCache(project, new DbConfig(url, username, password));
-                    saveToCacheAppend(project, new DbConfig(url, username, password));
-                } else {
-                    Messages.showErrorDialog(project,
-                            "以下字段不能为空：\n" + String.join("、", errorList),
-                            "输入不完整");
-                }
+            if (errorList.isEmpty()) {
+                url += appendUrlFix(parseDbType(url), url);
+                System.out.println(url);
+                callback.accept(new DbConfig(url, username, password));
+                saveToCache(project, new DbConfig(url, username, password));
+                saveToCacheAppend(project, new DbConfig(url, username, password));
+            } else {
+                Messages.showErrorDialog(project,
+                        "以下字段不能为空：\n" + String.join("、", errorList),
+                        "输入不完整");
+            }
 
         });
     }
@@ -489,10 +485,7 @@ public class DbConfigUtil {
             }
 
             if (errorList.isEmpty()) {
-               String dbType = parseDbType(url);
-               if (DataSourceConstants.DB_TYPE_MYSQL.equals(dbType)) {
-                   url += URL_FIX;
-               }
+                url += appendUrlFix(parseDbType(url), url);
                 saveToCache(project, new DbConfig(url, username, password));
                 saveToCacheAppend(project, new DbConfig(url, username, password));
                 return new DbConfig(url, username, password);
@@ -526,7 +519,7 @@ public class DbConfigUtil {
             }
 
             // 配置有变化，先测试连接
-            if (config!=null && !JdbcTableInfoUtil.testConnection(config)) {
+            if (config != null && !JdbcTableInfoUtil.testConnection(config)) {
                 return false;
             }
 
@@ -536,8 +529,7 @@ public class DbConfigUtil {
             Files.writeString(path, json, StandardCharsets.UTF_8);
             return true;
 
-        } catch (IOException e) {
-            Messages.showErrorDialog(project, CONFIG_SAVE_FAIL_PREFIX  + e.getMessage(), CONFIG_SAVE_FAIL_TITLE );
+        } catch (Exception e) {
             return false;
         }
     }
@@ -552,7 +544,8 @@ public class DbConfigUtil {
                 String json = Files.readString(path, StandardCharsets.UTF_8);
                 if (json != null && !json.isBlank()) {
                     // 反序列化成列表
-                    configList = objectMapper.readValue(json, new TypeReference<List<DbConfig>>() {});
+                    configList = objectMapper.readValue(json, new TypeReference<List<DbConfig>>() {
+                    });
                 }
             }
 
@@ -576,12 +569,10 @@ public class DbConfigUtil {
             Files.writeString(path, newJson, StandardCharsets.UTF_8);
 
             return true;
-        } catch (IOException e) {
-            Messages.showErrorDialog(project, CONFIG_SAVE_FAIL_PREFIX + e.getMessage(), CONFIG_SAVE_FAIL_TITLE);
+        } catch (Exception e) {
             return false;
         }
     }
-
 
 
     /**

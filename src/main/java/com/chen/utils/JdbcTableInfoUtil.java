@@ -5,16 +5,14 @@ import com.chen.entity.ColumnMeta;
 import com.chen.entity.DbConfig;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+
 import static com.chen.utils.DbConfigUtil.parseDbType;
 
 /**
  * JDBC 工具类，用于获取指定表的字段元数据信息
  * 包括字段名称、类型、是否主键和备注信息
- *
+ * <p>
  * 依赖 MySQL 数据库驱动：com.mysql.cj.jdbc.Driver
  *
  * @author czh
@@ -23,15 +21,23 @@ import static com.chen.utils.DbConfigUtil.parseDbType;
  */
 public class JdbcTableInfoUtil {
 
+    private static final Map<String, String> DRIVER_MAP = Map.of(
+            DataSourceConstants.DB_TYPE_MYSQL, DataSourceConstants.MYSQL_DRIVER,
+            DataSourceConstants.DB_TYPE_ORACLE, DataSourceConstants.ORACLE_DRIVER,
+            DataSourceConstants.DB_TYPE_SQLSERVER, DataSourceConstants.SQLSERVER_DRIVER,
+            DataSourceConstants.DB_TYPE_POSTGRESQL, DataSourceConstants.POSTGRESQL_DRIVER
+            // 可继续扩展
+    );
+
     /**
      * 获取指定表的字段元数据列表
      *
-     * @param dbConfig 数据库连接配置
+     * @param dbConfig  数据库连接配置
      * @param tableName 表名
      * @return 字段元数据列表（ColumnMeta）
      * @throws ClassNotFoundException 如果 JDBC 驱动未加载
      */
-    public static List<ColumnMeta> getTableColumnsFromMySQL(DbConfig dbConfig, String tableName) throws Exception {
+    public static List<ColumnMeta> getTableColumnsFromMySQL(DbConfig dbConfig, String tableName) {
         try (Connection conn = DataSourceManager.getDataSource(dbConfig).getConnection()) {
 
             DatabaseMetaData meta = conn.getMetaData();
@@ -72,20 +78,59 @@ public class JdbcTableInfoUtil {
 
             return columns;
 
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
-    public static List<ColumnMeta> getTableColumns(DbConfig dbConfig, String tableName) throws Exception {
-        String dbType = parseDbType(dbConfig.getUrl());
-        switch (dbType) {
-            case "oracle":
-                return getTableColumnsFromOracle(dbConfig, tableName);
-            case "mysql":
-                return getTableColumnsFromMySQL(dbConfig, tableName);
-            default:
-                throw new RuntimeException("不支持的数据库类型: " + dbType);
+
+    /**
+     * 获取 SQL Server 表字段元数据
+     *
+     * @param dbConfig  数据库配置
+     * @param tableName 表名
+     * @return 字段元数据列表
+     */
+    public static List<ColumnMeta> getTableColumnsFromSqlServer(DbConfig dbConfig, String tableName) {
+        try (Connection conn = DataSourceManager.getDataSource(dbConfig).getConnection()) {
+
+            DatabaseMetaData meta = conn.getMetaData();
+
+            // 获取表主键字段集合
+            Set<String> pkSet = new HashSet<>();
+            try (ResultSet pkRs = meta.getPrimaryKeys(null, null, tableName)) {
+                while (pkRs.next()) {
+                    pkSet.add(pkRs.getString("COLUMN_NAME"));
+                }
+            }
+
+            // 获取字段信息
+            List<ColumnMeta> columns = new ArrayList<>();
+            try (ResultSet rs = meta.getColumns(null, null, tableName, null)) {
+                while (rs.next()) {
+                    String name = rs.getString("COLUMN_NAME");      // 字段名称
+                    String type = rs.getString("TYPE_NAME");        // 字段类型
+                    String remark = rs.getString("REMARKS");        // 字段注释（SQL Server 有时需要额外查 sys.extended_properties）
+                    boolean pk = pkSet.contains(name);              // 是否主键
+                    columns.add(new ColumnMeta(name, type, pk, remark));
+                }
+            }
+
+            return columns;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("获取 SQL Server 字段失败: " + e.getMessage(), e);
         }
     }
-    public static List<ColumnMeta> getTableColumnsFromOracle(DbConfig dbConfig, String tableName) throws Exception {
+
+
+    /**
+     * 获取 Oracle 表字段元数据
+     *
+     * @param dbConfig  数据库配置
+     * @param tableName 表名
+     * @return 字段元数据列表
+     */
+    public static List<ColumnMeta> getTableColumnsFromOracle(DbConfig dbConfig, String tableName) {
         List<ColumnMeta> columns = new ArrayList<>();
         Set<String> pkSet = new HashSet<>();
 
@@ -121,10 +166,27 @@ public class JdbcTableInfoUtil {
                     }
                 }
             }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
 
         return columns;
     }
+
+
+    /**
+     * 获取指定表的字段元数据
+     *
+     * @param dbConfig  数据库连接配置
+     * @param tableName 表名
+     * @return 字段元数据列表
+     * @throws Exception 如果获取失败
+     */
+    public static List<ColumnMeta> getTableColumns(DbConfig dbConfig, String tableName) throws Exception {
+        return ColumnMetaUtils.getTableColumns(dbConfig, tableName);
+    }
+
+
 
     /**
      * 检查数据库连接是否有效
@@ -132,32 +194,19 @@ public class JdbcTableInfoUtil {
      * @param dbConfig 数据库连接配置
      * @return true 表示连接成功，false 表示连接失败
      */
-    public static boolean testConnection(DbConfig dbConfig) {
-        try {
-            String dbType = parseDbType(dbConfig.getUrl());
+    public static boolean testConnection(DbConfig dbConfig) throws Exception {
+        String dbType = parseDbType(dbConfig.getUrl());
+        String driverClass = Optional.ofNullable(DRIVER_MAP.get(dbType))
+                .orElseThrow(() -> new RuntimeException("不支持的数据库类型: " + dbType));
+        Class.forName(driverClass);
 
-            // 加载对应数据库驱动类
-            switch (dbType) {
-                case DataSourceConstants.DB_TYPE_MYSQL:
-                    Class.forName(DataSourceConstants.MYSQL_DRIVER);
-                    break;
-                case DataSourceConstants.DB_TYPE_ORACLE:
-                    Class.forName(DataSourceConstants.ORACLE_DRIVER);
-                    break;
-                default:
-                    throw new RuntimeException("不支持的数据库类型: " + dbType);
-            }
-
-            try (Connection conn = DriverManager.getConnection(
-                    dbConfig.getUrl(),
-                    dbConfig.getUsername(),
-                    dbConfig.getPassword())) {
-                return conn != null && !conn.isClosed();
-            }
-
-        } catch (Exception e) {
-            return false;
+        try (Connection conn = DriverManager.getConnection(
+                dbConfig.getUrl(),
+                dbConfig.getUsername(),
+                dbConfig.getPassword())) {
+            return conn != null && !conn.isClosed();
         }
     }
+
 
 }

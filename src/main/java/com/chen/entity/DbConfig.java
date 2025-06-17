@@ -24,10 +24,11 @@ public class DbConfig {
 
     public DbConfig() {
     }
+
     /**
      * 构造方法，初始化数据库配置
      *
-     * @param url 数据库连接地址
+     * @param url      数据库连接地址
      * @param username 数据库用户名
      * @param password 数据库密码
      */

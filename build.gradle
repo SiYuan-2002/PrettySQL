@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.chen"
-version = "1.4-SNAPSHOT"
+version = "1.5-SNAPSHOT"
 
 repositories {
     maven { url 'https://maven.aliyun.com/repository/central/'}
@@ -24,6 +24,8 @@ dependencies {
     implementation 'com.zaxxer:HikariCP:5.1.0'
     implementation 'com.github.jsqlparser:jsqlparser:4.9'
     implementation 'com.oracle:ojdbc6:11.2.0.4'
+    implementation 'org.postgresql:postgresql:42.7.2'
+    implementation 'com.microsoft.sqlserver:mssql-jdbc:12.6.1.jre11'
 }
 intellij {
     version = '2024.3.2'

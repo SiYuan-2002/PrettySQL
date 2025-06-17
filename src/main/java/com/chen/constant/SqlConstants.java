@@ -7,8 +7,6 @@ package com.chen.constant;
  * @date 2025/6/14 8:42
  */
 public class SqlConstants {
-    // JDBC 驱动
-    public static final String MYSQL_DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
 
     // SQL关键词（统一小写）
     public static final String SQL_DELETE = "delete";

@@ -9,6 +9,7 @@ package com.chen.utils;
 public class StringUtils {
     /**
      * 判断字符串不为 null、不为 "null"（忽略大小写）、不为 "" 或仅空白
+     *
      * @param str 待判断字符串
      * @return 合法返回 true，否则 false
      */
@@ -18,6 +19,7 @@ public class StringUtils {
 
     /**
      * 判断字符串为 null、"null"（忽略大小写）、"" 或仅空白
+     *
      * @param str 待判断字符串
      * @return 无效返回 true，否则 false
      */
@@ -27,6 +29,7 @@ public class StringUtils {
 
     /**
      * 去除字符串首尾空白并安全返回，若为 null 则返回空串
+     *
      * @param str 待处理字符串
      * @return 去空白后字符串或 ""
      */
@@ -36,6 +39,7 @@ public class StringUtils {
 
     /**
      * 判断两个字符串相等，忽略大小写和首尾空白，支持 null
+     *
      * @param str1 字符串1
      * @param str2 字符串2
      * @return 相等返回 true，否则 false

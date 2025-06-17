@@ -46,7 +46,7 @@ public class PrettySqlAction extends AnAction {
         if (selectedText == null || selectedText.isEmpty()) return;
         DbConfig dbConfig = loadFromCache(e.getProject());
         // 使用工具类格式化 SQL 文本
-        String formattedSql = SqlFormatUtil.formatSql(selectedText,dbConfig.getUrl().replaceFirst("^jdbc:(\\w+):.*", "$1"));
+        String formattedSql = SqlFormatUtil.formatSql(selectedText, dbConfig.getUrl().replaceFirst("^jdbc:(\\w+):.*", "$1"));
 
         // 设置缩进（这里是 11 个空格）
         String indent = "           ";

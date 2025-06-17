@@ -29,10 +29,10 @@ public class ColumnMeta {
     /**
      * 构造方法，初始化字段元数据
      *
-     * @param name 字段名
-     * @param type 字段类型
+     * @param name       字段名
+     * @param type       字段类型
      * @param primaryKey 是否为主键
-     * @param remark 字段备注
+     * @param remark     字段备注
      */
     public ColumnMeta(String name, String type, boolean primaryKey, String remark) {
         this.name = name;

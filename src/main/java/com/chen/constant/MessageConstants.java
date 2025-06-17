@@ -3,7 +3,7 @@ package com.chen.constant;
 /**
  * @author czh
  * @version 1.0
- * @description:
+ * @description: 消息常量类
  * @date 2025/6/14 8:39
  */
 public class MessageConstants {
@@ -20,6 +20,7 @@ public class MessageConstants {
     public static final String SQL_SUCCESS = "SQL语句语法正确";
     public static final String SQL_SUCCESS_TITLE = "SQL检查";
     public static final String CONFIG_SAVE_SUCCESS_MESSAGE_PREFIX = "数据库配置已保存到路径：\n";
+    public static final String CONFIG_SWITCH_SUCCESS_MESSAGE = "数据源切换成功";
     public static final String CONFIG_SAVE_SUCCESS_MESSAGE_SUFFIX = "\n请重新将鼠标悬停以查看表结构。";
     public static final String CONFIG_SAVE_SUCCESS_TITLE = "配置成功";
     public static final String ERROR_PREFIX = "<b>异常信息：</b> ";

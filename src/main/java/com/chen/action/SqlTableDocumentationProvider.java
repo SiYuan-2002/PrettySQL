@@ -1,4 +1,6 @@
 package com.chen.action;
+
+import com.chen.constant.MessageConstants;
 import com.chen.entity.ColumnMeta;
 import com.chen.entity.DbConfig;
 import com.chen.utils.JdbcTableInfoUtil;
@@ -11,6 +13,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.xml.XmlText;
 import com.intellij.psi.xml.XmlToken;
 import org.jetbrains.annotations.Nullable;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -61,15 +64,24 @@ public class SqlTableDocumentationProvider extends AbstractDocumentationProvider
 
         if (dbConfig == null) {
             promptUserInput(element.getProject(), config -> {
-                boolean state = testConnection(config);
-                if (!state) {
-                    Messages.showErrorDialog(element.getProject(), SQL_ERROR_CONNECTION_FAIL, SQL_ERROR_TITLE_CONNECTION_FAIL);
+                try {
+                    if (!testConnection(config)) {
+                        Messages.showErrorDialog(element.getProject(),
+                                MessageConstants.SQL_ERROR_CONNECTION_FAIL,
+                                MessageConstants.SQL_ERROR_TITLE_CONNECTION_FAIL);
+                        return;
+                    }
+                } catch (Exception ex) {
+                    Messages.showErrorDialog(element.getProject(),
+                            "数据库连接异常：" + ex.getMessage(),
+                            MessageConstants.SQL_ERROR_TITLE_CONNECTION_FAIL);
                     return;
                 }
+
                 if (saveToCache(element.getProject(), config)) {
                     Path path = Paths.get(element.getProject().getBasePath(), CONFIG_PATH);
                     Messages.showInfoMessage(
-                            CONFIG_SAVE_SUCCESS_MESSAGE_PREFIX  + path.toString() + CONFIG_SAVE_SUCCESS_MESSAGE_SUFFIX,
+                            CONFIG_SAVE_SUCCESS_MESSAGE_PREFIX + path.toString() + CONFIG_SAVE_SUCCESS_MESSAGE_SUFFIX,
                             CONFIG_SAVE_SUCCESS_TITLE
                     );
                 }
@@ -80,11 +92,11 @@ public class SqlTableDocumentationProvider extends AbstractDocumentationProvider
         try {
             columns = JdbcTableInfoUtil.getTableColumns(dbConfig, tableName);
         } catch (Exception e) {
-            return ERROR_PREFIX  + tableName +DATASOURCE+dbConfig.getUrl()+  e.getMessage();
+            return ERROR_PREFIX + tableName + DATASOURCE + dbConfig.getUrl() + e.getMessage();
         }
 
         if (columns == null || columns.isEmpty()) {
-            return ERROR_PREFIX +tableName +DATASOURCE+dbConfig.getUrl()+  ERROR_NO_COLUMNS;
+            return ERROR_PREFIX + tableName + DATASOURCE + dbConfig.getUrl() + ERROR_NO_COLUMNS;
         }
 
         return buildHtmlTable(tableName, columns);
@@ -150,7 +162,6 @@ public class SqlTableDocumentationProvider extends AbstractDocumentationProvider
 
         return text;
     }
-
 
 
 }

@@ -24,7 +24,8 @@ public class DataSourceManager {
     private static final Map<String, String> DRIVER_MAP = Map.of(
             DataSourceConstants.DB_TYPE_MYSQL, DataSourceConstants.MYSQL_DRIVER,
             DataSourceConstants.DB_TYPE_ORACLE, DataSourceConstants.ORACLE_DRIVER,
-            DataSourceConstants.DB_TYPE_SQLSERVER, DataSourceConstants.SQLSERVER_DRIVER
+            DataSourceConstants.DB_TYPE_SQLSERVER, DataSourceConstants.SQLSERVER_DRIVER,
+            DataSourceConstants.DB_TYPE_POSTGRESQL, DataSourceConstants.POSTGRESQL_DRIVER
     );
 
     /**

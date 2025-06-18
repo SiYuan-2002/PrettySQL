@@ -35,8 +35,7 @@
 <div style="display: flex; gap: 15px; align-items: flex-start;">
   <img src="https://znunwm.top/upload/2025/06/50265270-d2d4-47dc-8a6d-799a14ee2024.png" width="800" height="300" />
   <img src="https://znunwm.top/upload/2025/06/c805b2e8-6d34-4eb8-b342-dbb5f00eba5d.png" width="400" height="300" />
-  <img src="https://znunwm.top/upload/2025/06/ff0d5cb0-bd1f-4f30-bcfc-a749ebf37c6b.png" width="400" height="300" />
-  <img src="https://znunwm.top/upload/2025/06/9fe99aa3-16c2-4bf5-9db0-59c2a3abda2b.png" width="400" height="300" />
+  <img src="https://znunwm.top/upload/2025/06/ff0d5cb0-bd1f-4f30-bcfc-a749ebf37c6b.png" width="500" height="300" />
   <img src="https://znunwm.top/upload/2025/06/2c772845-48ad-4004-b1a5-3fa523a021ac.png" width="400" height="300" />
 
 </div>

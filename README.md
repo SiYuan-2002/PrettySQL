@@ -23,7 +23,7 @@
 
 在 IntelliJ IDEA 中打开插件市场，搜索 "PrettySQL" 并安装 [离线手动安装](https://github.com/SiYuan-2002/PrettySQL/releases/tag/1.4)。
 
-1.选择xml文件里的sql语句右键格式化SQL即可
+1.选择xml文件里的sql语句右键格式化SQL即可（支持选中xml标签）
 
 2.如果自带yml配置文件默认读取这里，如果没有则右键弹窗数据库配置源自行添加
 

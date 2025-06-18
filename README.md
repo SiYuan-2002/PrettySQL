@@ -1,4 +1,4 @@
-# PrettySQL多功能插件
+# PrettySQL多功能插件 #### [文档中心](http://czh.znunwm.top/)
 
 
 # [文档中心](http://czh.znunwm.top/)

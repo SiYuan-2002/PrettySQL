@@ -36,51 +36,58 @@ PrettySQL is an IntelliJ plugin that beautifies and formats SQL queries automati
 
 
     <actions>
-        <action id="PrettySqlAction"
-                class="com.chen.action.PrettySqlAction"
-                text="格式化 SQL"
-                description="使用格式化工具优化 SQL 排版">
-            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
-            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt H"/>
-        </action>
-        <action id="CheckSqlAction"
-                class="com.chen.action.CheckSqlAction"
-                text="SQL检查"
-                description="检查SQL语句">
-            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
-            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt G"/>
-        </action>
-
-
-        <!-- 定义一级菜单（菜单组），放到右键菜单 -->
-        <group id="DbConfigRootGroup"
-               text="数据库配置"
-               description="数据库相关操作"
+        <!-- 一级菜单组：SQL 工具箱 -->
+        <group id="SqlToolRootGroup"
+               text="PrettySQL工具箱"
+               description="常用 SQL 开发工具"
                popup="true">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </group>
 
+        <!-- 格式化 SQL -->
+        <action id="PrettySqlAction"
+                class="com.chen.action.PrettySqlAction"
+                text="格式化 SQL"
+                description="使用格式化工具优化 SQL 排版">
+            <add-to-group group-id="SqlToolRootGroup" anchor="first"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt H"/>
+        </action>
 
+        <!-- SQL 语法检查 -->
+        <action id="CheckSqlAction"
+                class="com.chen.action.CheckSqlAction"
+                text="SQL检查"
+                description="检查SQL语句">
+            <add-to-group group-id="SqlToolRootGroup" anchor="after" relative-to-action="PrettySqlAction"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt G"/>
+        </action>
+
+        <!-- 二级菜单：数据库配置 -->
+        <group id="DbConfigSubGroup"
+               text="数据库配置"
+               description="数据库连接相关设置"
+               popup="true">
+            <add-to-group group-id="SqlToolRootGroup" anchor="after" relative-to-action="CheckSqlAction"/>
+        </group>
+
+        <!-- 数据源新增 -->
         <action id="DbConfigAddAction"
                 class="com.chen.action.DbConfigAddAction"
                 text="新增数据源"
                 description="新增数据库连接配置">
-            <add-to-group group-id="DbConfigRootGroup" anchor="first"/>
+            <add-to-group group-id="DbConfigSubGroup" anchor="first"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt N"/>
         </action>
 
-
+        <!-- 数据源管理 -->
         <action id="DbConfigManageAction"
                 class="com.chen.action.DbConfigManageAction"
                 text="配置数据源"
                 description="管理已保存的数据源配置">
-            <add-to-group group-id="DbConfigRootGroup" anchor="last"/>
+            <add-to-group group-id="DbConfigSubGroup" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt M"/>
         </action>
-
-
-
-
     </actions>
+
 
 </idea-plugin>

@@ -77,8 +77,6 @@ public class CheckSqlAction extends AnAction {
         }
 
 
-        saveToCache(e.getProject(), dbConfig);
-
         // 语法检查
         String syntaxResult = SqlCheckUtil.checkSQLWithRollback(dbConfig, sql);
         if (syntaxResult != null) {

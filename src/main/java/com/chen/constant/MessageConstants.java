@@ -28,5 +28,13 @@ public class MessageConstants {
     public static final String ERROR_NO_COLUMNS = "<br>未在数据库中找到该表结构或表无字段。";
     public static final String CONFIG_SAVE_FAIL_PREFIX = "保存配置失败：";
     public static final String CONFIG_SAVE_FAIL_TITLE = "保存错误";
+    public static final String DIALOG_TITLE = "执行计划分析";
+    public static final String ERROR_NO_EDITOR = "未选中任何 SQL，且编辑器内容为空";
+    public static final String ERROR_NO_DB_CONFIG = "未找到数据库配置，请先配置数据库连接";
+    public static final String ERROR_CONNECTION_FAIL = "数据库连接失败，请检查配置";
+    public static final String ERROR_CONNECTION_EXCEPTION_PREFIX = "数据库连接异常：";
+    public static final String WARN_NOT_SELECT = "执行计划只支持 SELECT 语句";
+    public static final String INFO_NO_RESULT = "执行计划无结果";
+    public static final String ERROR_ANALYZE_FAIL_PREFIX = "执行计划分析失败：";
 }
 

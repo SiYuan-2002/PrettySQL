@@ -8,6 +8,7 @@ import java.sql.*;
 import java.util.*;
 
 import static com.chen.utils.DbConfigUtil.parseDbType;
+import static java.sql.DriverManager.getConnection;
 
 /**
  * JDBC 工具类，用于获取指定表的字段元数据信息
@@ -200,13 +201,54 @@ public class JdbcTableInfoUtil {
                 .orElseThrow(() -> new RuntimeException("不支持的数据库类型: " + dbType));
         Class.forName(driverClass);
 
-        try (Connection conn = DriverManager.getConnection(
+        try (Connection conn = getConnection(
                 dbConfig.getUrl(),
                 dbConfig.getUsername(),
                 dbConfig.getPassword())) {
             return conn != null && !conn.isClosed();
         }
     }
+
+    /**
+     * 执行 EXPLAIN 查询，并返回每行结果映射列表
+     * 只支持 MySQL 的 EXPLAIN
+     *
+     * @param config 数据库连接配置
+     * @param sql    要执行 EXPLAIN 的 SQL 查询（必须是 SELECT）
+     * @return 结果集每行对应的 Map 集合列表
+     * @throws Exception 执行异常
+     */
+    public static List<Map<String, Object>> explainSql(DbConfig config, String sql) throws Exception {
+        if (sql == null || !sql.trim().toLowerCase().startsWith("select")) {
+            throw new IllegalArgumentException("只支持 SELECT 语句的执行计划");
+        }
+
+        String explainSql = "EXPLAIN " + sql;
+
+        try (Connection conn = DataSourceManager.getDataSource(config).getConnection()) {
+             PreparedStatement ps = conn.prepareStatement(explainSql);
+             ResultSet rs = ps.executeQuery();
+
+            ResultSetMetaData metaData = rs.getMetaData();
+            int colCount = metaData.getColumnCount();
+            List<Map<String, Object>> list = new ArrayList<>();
+
+            while (rs.next()) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                for (int i = 1; i <= colCount; i++) {
+                    String colName = metaData.getColumnLabel(i);
+                    Object value = rs.getObject(i);
+                    row.put(colName, value);
+                }
+                list.add(row);
+            }
+
+            return list;
+        } catch (SQLException e) {
+            throw new Exception("执行 EXPLAIN 失败：" + e.getMessage(), e);
+        }
+    }
+
 
 
 }

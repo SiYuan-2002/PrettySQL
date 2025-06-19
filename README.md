@@ -19,7 +19,7 @@
 更多功能，请到[文档中心](http://czh.znunwm.top/)的项目主页进行了解。
 
 
-### 2.1 引入PrettySQL插件(暂时不支持IntelliJ IDEA 2012.2.2之前版本)
+### 2.1 引入PrettySQL插件(暂时不支持IntelliJ IDEA 2022.2.2之前版本)
 
 在 IntelliJ IDEA 中打开插件市场，搜索 "PrettySQL" 安装 [离线手动安装](https://github.com/SiYuan-2002/PrettySQL/releases/tag/1.4)。
 

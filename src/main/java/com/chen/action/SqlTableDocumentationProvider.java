@@ -115,6 +115,7 @@ public class SqlTableDocumentationProvider extends AbstractDocumentationProvider
                 .append(".db-table td { background:#23272f; font-size:14px; }")
                 .append(".db-table tr:hover td { background:#2d333b; }")
                 .append(".db-table .pk { color:#ffb300; font-weight:bold; }")
+                .append(".db-table .idx { color:#4CAF50; font-weight:bold; }")
                 .append("</style>");
 
         html.append("<b style='font-size:1.1em;color:#e1eaff;'>表名：</b> ").append(tableName).append("<br>");
@@ -122,14 +123,16 @@ public class SqlTableDocumentationProvider extends AbstractDocumentationProvider
                 .append("<th style='width: 25%;'>字段名称</th>")
                 .append("<th style='width: 20%;'>类型</th>")
                 .append("<th style='width: 40%;'>备注</th>")
-                .append("<th style='width: 15%;'>主键</th>")
+                .append("<th style='width: 7.5%;'>主键</th>")
+                .append("<th style='width: 7.5%;'>索引</th>")
                 .append("</tr></thead><tbody>");
 
         for (ColumnMeta col : columns) {
             html.append("<tr><td>").append(col.getName()).append("</td>")
                     .append("<td>").append(col.getType()).append("</td>")
                     .append("<td>").append(col.getRemark() == null ? "" : col.getRemark()).append("</td>")
-                    .append("<td>").append(col.isPrimaryKey() ? "<span class='pk'>YES</span>" : "").append("</td></tr>");
+                    .append("<td>").append(col.isPrimaryKey() ? "<span class='pk'>YES</span>" : "").append("</td>")
+                    .append("<td>").append(col.isIndex() ? "<span class='idx'>YES</span>" : "").append("</td></tr>");
         }
 
         html.append("</tbody></table>");

@@ -2,12 +2,12 @@ package com.chen.entity;
 
 /**
  * 数据库字段元数据信息类
- * 用于描述表中的某一列，包括列名、类型、是否主键、备注等信息
+ * 用于描述表中的某一列，包括列名、类型、是否主键、是否索引、备注等信息
  * 可用于代码生成、数据库结构读取等场景
  *
  * @author czh
- * @version 1.0
- * @date 2025/6/12 14:47
+ * @version 2.0
+ * @date 2025/6/19
  */
 public class ColumnMeta {
 
@@ -19,6 +19,9 @@ public class ColumnMeta {
 
     // 是否为主键
     private boolean primaryKey;
+
+    // 是否为索引字段（主键字段一定是索引，其他索引字段不一定是主键）
+    private boolean index;
 
     // 字段备注（注释）
     private String remark;
@@ -32,18 +35,19 @@ public class ColumnMeta {
      * @param name       字段名
      * @param type       字段类型
      * @param primaryKey 是否为主键
+     * @param index      是否为索引字段
      * @param remark     字段备注
      */
-    public ColumnMeta(String name, String type, boolean primaryKey, String remark) {
+    public ColumnMeta(String name, String type, boolean primaryKey, boolean index, String remark) {
         this.name = name;
         this.type = type;
         this.primaryKey = primaryKey;
+        this.index = index;
         this.remark = remark;
     }
 
     /**
      * 获取字段名称
-     *
      * @return 字段名
      */
     public String getName() {
@@ -52,7 +56,6 @@ public class ColumnMeta {
 
     /**
      * 设置字段名称
-     *
      * @param name 字段名
      */
     public void setName(String name) {
@@ -61,7 +64,6 @@ public class ColumnMeta {
 
     /**
      * 获取字段类型
-     *
      * @return 字段类型
      */
     public String getType() {
@@ -70,7 +72,6 @@ public class ColumnMeta {
 
     /**
      * 设置字段类型
-     *
      * @param type 字段类型
      */
     public void setType(String type) {
@@ -79,7 +80,6 @@ public class ColumnMeta {
 
     /**
      * 是否为主键
-     *
      * @return true 是主键，false 不是
      */
     public boolean isPrimaryKey() {
@@ -88,7 +88,6 @@ public class ColumnMeta {
 
     /**
      * 设置是否为主键
-     *
      * @param primaryKey 是否主键
      */
     public void setPrimaryKey(boolean primaryKey) {
@@ -96,8 +95,23 @@ public class ColumnMeta {
     }
 
     /**
+     * 是否为索引字段
+     * @return true 是索引，false 不是
+     */
+    public boolean isIndex() {
+        return index;
+    }
+
+    /**
+     * 设置是否为索引字段
+     * @param index 是否索引字段
+     */
+    public void setIndex(boolean index) {
+        this.index = index;
+    }
+
+    /**
      * 获取字段备注
-     *
      * @return 字段备注
      */
     public String getRemark() {
@@ -106,10 +120,20 @@ public class ColumnMeta {
 
     /**
      * 设置字段备注
-     *
      * @param remark 字段备注
      */
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    @Override
+    public String toString() {
+        return "ColumnMeta{" +
+                "name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                ", primaryKey=" + primaryKey +
+                ", index=" + index +
+                ", remark='" + remark + '\'' +
+                '}';
     }
 }

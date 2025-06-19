@@ -40,7 +40,6 @@ public class JdbcTableInfoUtil {
      */
     public static List<ColumnMeta> getTableColumnsFromMySQL(DbConfig dbConfig, String tableName) {
         try (Connection conn = DataSourceManager.getDataSource(dbConfig).getConnection()) {
-
             DatabaseMetaData meta = conn.getMetaData();
 
             String catalog = null;
@@ -65,6 +64,17 @@ public class JdbcTableInfoUtil {
                 }
             }
 
+            // 获取表所有索引字段集合
+            Set<String> indexSet = new HashSet<>();
+            try (ResultSet idxRs = meta.getIndexInfo(catalog, null, tableName, false, false)) {
+                while (idxRs.next()) {
+                    String colName = idxRs.getString("COLUMN_NAME");
+                    if (colName != null) {
+                        indexSet.add(colName);
+                    }
+                }
+            }
+
             // 获取表的字段信息
             List<ColumnMeta> columns = new ArrayList<>();
             try (ResultSet rs = meta.getColumns(catalog, null, tableName, null)) {
@@ -73,7 +83,8 @@ public class JdbcTableInfoUtil {
                     String type = rs.getString("TYPE_NAME");      // 字段类型
                     String remark = rs.getString("REMARKS");      // 字段注释
                     boolean pk = pkSet.contains(name);            // 是否为主键
-                    columns.add(new ColumnMeta(name, type, pk, remark));
+                    boolean idx = indexSet.contains(name);        // 是否为索引字段
+                    columns.add(new ColumnMeta(name, type, pk, idx, remark));
                 }
             }
 
@@ -84,6 +95,7 @@ public class JdbcTableInfoUtil {
         }
     }
 
+
     /**
      * 获取 SQL Server 表字段元数据
      *
@@ -93,10 +105,9 @@ public class JdbcTableInfoUtil {
      */
     public static List<ColumnMeta> getTableColumnsFromSqlServer(DbConfig dbConfig, String tableName) {
         try (Connection conn = DataSourceManager.getDataSource(dbConfig).getConnection()) {
-
             DatabaseMetaData meta = conn.getMetaData();
 
-            // 获取表主键字段集合
+            // 主键集合
             Set<String> pkSet = new HashSet<>();
             try (ResultSet pkRs = meta.getPrimaryKeys(null, null, tableName)) {
                 while (pkRs.next()) {
@@ -104,24 +115,37 @@ public class JdbcTableInfoUtil {
                 }
             }
 
-            // 获取字段信息
+            // 索引字段集合
+            Set<String> indexSet = new HashSet<>();
+            try (ResultSet idxRs = meta.getIndexInfo(null, null, tableName, false, false)) {
+                while (idxRs.next()) {
+                    String colName = idxRs.getString("COLUMN_NAME");
+                    if (colName != null) {
+                        indexSet.add(colName);
+                    }
+                }
+            }
+
+            // 字段信息
             List<ColumnMeta> columns = new ArrayList<>();
             try (ResultSet rs = meta.getColumns(null, null, tableName, null)) {
                 while (rs.next()) {
-                    String name = rs.getString("COLUMN_NAME");      // 字段名称
-                    String type = rs.getString("TYPE_NAME");        // 字段类型
-                    String remark = rs.getString("REMARKS");        // 字段注释（SQL Server 有时需要额外查 sys.extended_properties）
-                    boolean pk = pkSet.contains(name);              // 是否主键
-                    columns.add(new ColumnMeta(name, type, pk, remark));
+                    String name = rs.getString("COLUMN_NAME");
+                    String type = rs.getString("TYPE_NAME");
+                    String remark = rs.getString("REMARKS"); // SQL Server 可能为空
+                    boolean pk = pkSet.contains(name);
+                    boolean idx = indexSet.contains(name);
+                    columns.add(new ColumnMeta(name, type, pk, idx, remark));
                 }
             }
 
             return columns;
-
         } catch (SQLException e) {
             throw new RuntimeException("获取 SQL Server 字段失败: " + e.getMessage(), e);
         }
     }
+
+
 
 
     /**
@@ -134,19 +158,30 @@ public class JdbcTableInfoUtil {
     public static List<ColumnMeta> getTableColumnsFromOracle(DbConfig dbConfig, String tableName) {
         List<ColumnMeta> columns = new ArrayList<>();
         Set<String> pkSet = new HashSet<>();
+        Set<String> indexSet = new HashSet<>();
 
         try (Connection conn = DataSourceManager.getDataSource(dbConfig).getConnection()) {
             DatabaseMetaData meta = conn.getMetaData();
             String schema = dbConfig.getUsername().toUpperCase();
 
-            // 获取主键
+            // 获取主键集合
             try (ResultSet pkRs = meta.getPrimaryKeys(null, schema, tableName.toUpperCase())) {
                 while (pkRs.next()) {
                     pkSet.add(pkRs.getString("COLUMN_NAME"));
                 }
             }
 
-            // 获取列及类型
+            // 获取索引字段集合
+            try (ResultSet idxRs = meta.getIndexInfo(null, schema, tableName.toUpperCase(), false, false)) {
+                while (idxRs.next()) {
+                    String colName = idxRs.getString("COLUMN_NAME");
+                    if (colName != null) {
+                        indexSet.add(colName);
+                    }
+                }
+            }
+
+            // 获取列及类型及注释
             String columnSql = "SELECT col.COLUMN_NAME, col.DATA_TYPE, com.COMMENTS " +
                     "FROM ALL_TAB_COLUMNS col " +
                     "LEFT JOIN ALL_COL_COMMENTS com " +
@@ -163,12 +198,13 @@ public class JdbcTableInfoUtil {
                         String type = rs.getString("DATA_TYPE");
                         String remark = rs.getString("COMMENTS");
                         boolean pk = pkSet.contains(name);
-                        columns.add(new ColumnMeta(name, type, pk, remark));
+                        boolean idx = indexSet.contains(name);
+                        columns.add(new ColumnMeta(name, type, pk, idx, remark));
                     }
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("获取 Oracle 字段失败: " + e.getMessage(), e);
         }
 
         return columns;

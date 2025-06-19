@@ -1,6 +1,4 @@
 package com.chen.action;
-
-import com.chen.constant.MessageConstants;
 import com.chen.entity.DbConfig;
 import com.chen.utils.HtmlViewerUtil;
 import com.chen.utils.JdbcTableInfoUtil;
@@ -12,9 +10,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.chen.constant.MessageConstants.*;
 import static com.chen.utils.DbConfigUtil.*;
@@ -128,21 +124,22 @@ public class ExplainSqlAction extends AnAction {
 
         html.append("<table class='db-table'><thead><tr>");
         // 中文列头映射
-        Map<String, String> columnTitleMap = Map.ofEntries(
-                Map.entry("id", "序号"),
-                Map.entry("select_type", "查询类型"),
-                Map.entry("table", "表名"),
-                Map.entry("type", "连接类型"),
-                Map.entry("possible_keys", "可能使用的索引"),
-                Map.entry("key", "实际使用的索引"),
-                Map.entry("key_len", "索引长度"),
-                Map.entry("ref", "关联字段"),
-                Map.entry("rows", "扫描行数"),
-                Map.entry("filtered", "过滤比例"),
-                Map.entry("Extra", "额外信息")
-        );
+        Map<String, String> columnTitleMap = new LinkedHashMap<>();
+        columnTitleMap.put("id", "序号");
+        columnTitleMap.put("select_type", "查询类型");
+        columnTitleMap.put("table", "表名");
+        columnTitleMap.put("type", "连接类型");
+        columnTitleMap.put("possible_keys", "可能使用的索引");
+        columnTitleMap.put("key", "实际使用的索引");
+        columnTitleMap.put("key_len", "索引长度");
+        columnTitleMap.put("ref", "关联字段");
+        columnTitleMap.put("rows", "扫描行数");
+        columnTitleMap.put("filtered", "过滤比例");
+        columnTitleMap.put("Extra", "额外信息");
 
-        var keys = rows.get(0).keySet();
+       // 获取第一个元素的 keySet（使用 List<Map<String, Object>> 类型 rows）
+        Set<String> keys = rows.get(0).keySet();
+
         for (String col : keys) {
             html.append("<th>").append(columnTitleMap.getOrDefault(col, col)).append("</th>");
         }

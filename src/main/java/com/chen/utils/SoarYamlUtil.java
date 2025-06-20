@@ -12,10 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.chen.constant.FileConstant.SOARYMAL_PATH;
 import static com.chen.constant.FileConstant.SQL_SCRIPT_FILE_NAME;
@@ -113,13 +110,56 @@ public class SoarYamlUtil {
 
     public static String runSoarFixed(Project project) throws Exception {
         String projectBasePath = project.getBasePath();
-        Path sqlFilePath = Paths.get(projectBasePath);
-        System.out.println("路线"+sqlFilePath);
-        String paras = "-query="+sqlFilePath+"\\.idea\\executeSqlFile.sql";
-        String cmd = sqlFilePath+"\\.idea\\soar.exe " + paras;
+        Path basePath = Paths.get(projectBasePath);
 
-        return openExe(cmd);
+        // 构建 soar.exe 路径和 SQL 文件路径
+        Path soarExePath = basePath.resolve(".idea").resolve("soar.exe");
+        Path sqlFilePath = basePath.resolve(".idea").resolve("executeSqlFile.sql");
+
+        System.out.println("执行路径: " + soarExePath);
+        System.out.println("SQL文件路径: " + sqlFilePath);
+
+        // 构建命令参数列表
+        List<String> command = new ArrayList<>();
+        command.add(soarExePath.toString());
+        command.add("-query=" + sqlFilePath.toString());
+
+        // 创建 ProcessBuilder
+        ProcessBuilder builder = new ProcessBuilder(command);
+        builder.redirectErrorStream(true); // 合并标准错误输出
+
+        Process process = null;
+        StringBuilder output = new StringBuilder();
+
+        try {
+            process = builder.start();
+
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                    output.append(line).append(System.lineSeparator());
+                }
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                output.append("进程异常退出，退出码: ").append(exitCode).append(System.lineSeparator());
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            output.append("执行异常: ").append(e.getMessage()).append(System.lineSeparator());
+        } finally {
+            if (process != null) {
+                process.destroy();
+            }
+        }
+
+        return output.toString();
     }
+
     public static void downHtml(Project project) throws Exception {
         String projectBasePath = project.getBasePath();
         if (projectBasePath == null) {
@@ -250,81 +290,6 @@ public class SoarYamlUtil {
         } finally {
             // 恢复原始 soar.yaml 配置
             Files.writeString(yamlPath, backupContent, StandardCharsets.UTF_8);
-        }
-    }
-
-
-    public static String openExe(String cmd) {
-        StringBuilder output = new StringBuilder();
-        StringBuilder error = new StringBuilder();
-
-        BufferedReader br = null;
-        BufferedReader brError = null;
-        Process p = null;
-
-        try {
-            p = Runtime.getRuntime().exec(cmd);
-
-            // 读取标准输出流
-            br = new BufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8));
-            // 读取错误输出流
-            brError = new BufferedReader(new InputStreamReader(p.getErrorStream(), StandardCharsets.UTF_8));
-
-            String line;
-            while ((line = br.readLine()) != null) {
-                System.out.println(line);
-                output.append(line).append(System.lineSeparator());
-            }
-            while ((line = brError.readLine()) != null) {
-                System.err.println(line);
-                error.append(line).append(System.lineSeparator());
-            }
-
-            int exitCode = p.waitFor();
-            if (exitCode != 0) {
-                output.append("进程异常退出，退出码: ").append(exitCode).append(System.lineSeparator());
-                output.append("错误信息:").append(System.lineSeparator()).append(error);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            output.append("执行异常: ").append(e.getMessage()).append(System.lineSeparator());
-        } finally {
-            try {
-                if (br != null) br.close();
-                if (brError != null) brError.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            if (p != null) p.destroy();
-        }
-
-        return output.toString();
-    }
-
-    public static void openExeNoMsg(String cmd) {
-        BufferedReader br = null;
-        BufferedReader brError = null;
-
-        try {
-            //执行exe  cmd可以为字符串(exe存放路径)也可为数组，调用exe时需要传入参数时，可以传数组调用(参数有顺序要求)
-            Process p = Runtime.getRuntime().exec(cmd);
-            String line = null;
-            //获得子进程的输入流。
-            br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            //获得子进程的错误流。
-            brError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-            while ((line = br.readLine()) != null  || (line = brError.readLine()) != null) {
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
         }
     }
 

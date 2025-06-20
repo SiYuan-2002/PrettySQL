@@ -1,5 +1,7 @@
 package com.chen.utils;
 
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import groovyjarjarantlr4.v4.runtime.misc.Nullable;
 
@@ -13,7 +15,7 @@ public class HtmlViewerUtil {
      * @param html HTML 字符串内容
      * @param title 窗口标题
      */
-    public static void showHtml(String html, String title, @Nullable String markdownReportHtml) {
+    public static void showHtml(Project project,String html, String title, @Nullable String markdownReportHtml, boolean isReportPage) {
         JEditorPane editorPane = new JEditorPane("text/html", html);
         editorPane.setEditable(false);
         editorPane.setCaretPosition(0);
@@ -26,14 +28,42 @@ public class HtmlViewerUtil {
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        if (markdownReportHtml != null) {
-            JButton button = new JButton("查看分析报告和建议");
-            button.addActionListener(e -> {
-                // 弹出 markdown 分析报告
-                showHtml(markdownReportHtml, "SQL分析报告", null);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+        // 如果是展示原始HTML的弹窗，才显示“查看分析报告和建议”按钮
+        if (!isReportPage && markdownReportHtml != null) {
+            JButton viewReportBtn = new JButton("查看分析报告和建议");
+            viewReportBtn.addActionListener(e -> {
+                // 这里打开的是报告页面（isReportPage = true）
+                showHtml(project,markdownReportHtml, "SQL分析报告", null, true);
             });
-            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-            buttonPanel.add(button);
+            buttonPanel.add(viewReportBtn);
+        }
+
+        // 如果是报告页面，显示生成HTML和生成MD按钮
+        if (isReportPage) {
+            JButton generateHtmlBtn = new JButton("生成 HTML");
+            generateHtmlBtn.addActionListener(e -> {
+                try {
+                    SoarYamlUtil.downHtml(project);
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            });
+            buttonPanel.add(generateHtmlBtn);
+
+            JButton generateMdBtn = new JButton("生成 MD");
+            generateMdBtn.addActionListener(e -> {
+                try {
+                    SoarYamlUtil.downMD(project);
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            });
+            buttonPanel.add(generateMdBtn);
+        }
+
+        if (buttonPanel.getComponentCount() > 0) {
             panel.add(buttonPanel, BorderLayout.SOUTH);
         }
 
@@ -46,5 +76,7 @@ public class HtmlViewerUtil {
                 .createPopup()
                 .showInFocusCenter();
     }
+
+
 
 }

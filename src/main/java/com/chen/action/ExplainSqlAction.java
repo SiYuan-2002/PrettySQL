@@ -109,7 +109,7 @@ public class ExplainSqlAction extends AnAction {
 
             String html = buildExplainHtmlWithChinese(sql, explainRows);
 
-            HtmlViewerUtil.showHtml(html, DIALOG_TITLE,runSoarFixed(project));
+            HtmlViewerUtil.showHtml(project,html, DIALOG_TITLE,runSoarFixed(project),false);
 
         } catch (Exception ex) {
             Messages.showErrorDialog(project,

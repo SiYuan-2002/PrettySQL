@@ -43,13 +43,6 @@
 
 #### 🎥 使用演示视频
 
-<iframe 
-    src="https://znunwm.top/upload/2025/06/2025-06-20%2012-17-20.mp4"
-    width="800" 
-    height="450" 
-    frameborder="0" 
-    allowfullscreen>
-</iframe>
 
 ### 🎉 加入我们
 PrettySQL还在持续更新中，本项目欢迎您的参与，共同维护，逐步完善，将项目做得更强。项目采用 Apache-2.0 开源协议，本着一切免费的原则，原则上不会收取任何费用及版权，可以放心使用。

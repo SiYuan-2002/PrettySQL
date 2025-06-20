@@ -44,14 +44,11 @@
 #### 🎥 使用演示视频
 
 <iframe 
-src="https://znunwm.top/upload/2025/06/2025-06-20%2012-17-20.mp4" 
-scrolling="no" 
-border="0" 
-frameborder="no" 
-framespacing="0" 
-allowfullscreen="true" 
-height=600 
-width=800> 
+    src="https://znunwm.top/upload/2025/06/2025-06-20%2012-17-20.mp4"
+    width="800" 
+    height="450" 
+    frameborder="0" 
+    allowfullscreen>
 </iframe>
 
 ### 🎉 加入我们

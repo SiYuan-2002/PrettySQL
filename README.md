@@ -38,14 +38,15 @@
   <img src="https://znunwm.top/upload/2025/06/ff0d5cb0-bd1f-4f30-bcfc-a749ebf37c6b.png" width="800" height="300" />
   <img src="https://znunwm.top/upload/2025/06/2c772845-48ad-4004-b1a5-3fa523a021ac.png" width="400" height="300" />
   <img src="https://znunwm.top/upload/2025/06/de217a72-635d-4602-8967-79a8ff9761d4.png" width="800" height="300" />
-  <video width="800" height="300" controls>
-    <source src="https://znunwm.top/upload/2025/06/2025-06-20%2012-17-20.mp4" type="video/mp4">
-    您的浏览器不支持 video 标签。
-  </video>
 </div>
 
 
+#### 🎥 使用演示视频
 
+<video width="800" height="300" controls>
+  <source src="https://znunwm.top/upload/2025/06/2025-06-20%2012-17-20.mp4" type="video/mp4">
+  您的浏览器不支持 video 标签。
+</video>
 
 ### 🎉 加入我们
 PrettySQL还在持续更新中，本项目欢迎您的参与，共同维护，逐步完善，将项目做得更强。项目采用 Apache-2.0 开源协议，本着一切免费的原则，原则上不会收取任何费用及版权，可以放心使用。

@@ -510,6 +510,12 @@ public class DbConfigUtil {
                 String oldJson = Files.readString(path, StandardCharsets.UTF_8);
                 DbConfig oldConfig = objectMapper.readValue(oldJson, DbConfig.class);
                 if (Objects.equals(oldConfig, config)) {
+                    String yamlTemplate = SoarYamlUtil.readYamlTemplate("soar.yaml");
+                    String replacedYaml  = SoarYamlUtil.replaceDbConfigInYaml(config, yamlTemplate);
+                    Path ideaDir = Paths.get(project.getBasePath(), ".idea");
+                    SoarYamlUtil.copySoarExeToDir(ideaDir);
+                    String userProjectPath = project.getBasePath();
+                    SoarYamlUtil.writeYamlToProjectIdea(userProjectPath, replacedYaml);
                     // 配置一致，无需保存
                     return true;
                 }
@@ -524,11 +530,39 @@ public class DbConfigUtil {
             Files.createDirectories(path.getParent());
             String json = objectMapper.writeValueAsString(config);
             Files.writeString(path, json, StandardCharsets.UTF_8);
+            String yamlTemplate = SoarYamlUtil.readYamlTemplate("soar.yaml");
+            String replacedYaml  = SoarYamlUtil.replaceDbConfigInYaml(config, yamlTemplate);
+            Path ideaDir = Paths.get(project.getBasePath(), ".idea");
+            SoarYamlUtil.copySoarExeToDir(ideaDir);
+            String userProjectPath = project.getBasePath();
+            SoarYamlUtil.writeYamlToProjectIdea(userProjectPath, replacedYaml);
             return true;
 
         } catch (Exception e) {
             return false;
         }
+    }
+    public static void updateYamlConfig(String yamlPath, DbConfig config) throws IOException {
+        String yaml = Files.readString(Paths.get(yamlPath));
+
+        // 假设你能从 config 中拿到 url, user, password
+        String url = config.getUrl();
+        String user = config.getUsername();
+        String password = config.getPassword();
+
+        // 解析出 addr 和 schema（示例逻辑）
+        String addr = url.substring(url.indexOf("//") + 2, url.indexOf("/", url.indexOf("//") + 2));
+        String schema = url.substring(url.indexOf("/", url.indexOf("//") + 2) + 1,
+                url.contains("?") ? url.indexOf("?") : url.length());
+
+        // 替换 YAML 内容（保留缩进）
+        yaml = yaml.replaceAll("(?m)^([ \\t]*)addr:\\s*.*", "$1addr: " + addr);
+        yaml = yaml.replaceAll("(?m)^([ \\t]*)schema:\\s*.*", "$1schema: " + schema);
+        yaml = yaml.replaceAll("(?m)^([ \\t]*)user:\\s*.*", "$1user: " + user);
+        yaml = yaml.replaceAll("(?m)^([ \\t]*)password:\\s*.*", "$1password: " + password);
+
+        // 写回文件
+        Files.writeString(Paths.get(yamlPath), yaml);
     }
 
     public static boolean saveToCacheAppend(Project project, DbConfig newConfig) {

@@ -1,16 +1,17 @@
 package com.chen.action;
 
 import com.chen.constant.MessageConstants;
+import com.chen.utils.SoarYamlUtil;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.IOException;
 
 import static com.chen.constant.FileConstant.CONFIG_PATH;
+import static com.chen.constant.FileConstant.SOARYMAL_PATH;
 import static com.chen.constant.MessageConstants.*;
 import static com.chen.utils.DbConfigUtil.promptUserInputWithDbType;
 import static com.chen.utils.DbConfigUtil.saveToCache;

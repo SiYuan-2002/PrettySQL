@@ -1,9 +1,9 @@
 package com.chen.action;
 
-import com.chen.constant.MessageConstants;
 import com.chen.entity.DbConfig;
 import com.chen.utils.HtmlViewerUtil;
 import com.chen.utils.JdbcTableInfoUtil;
+import com.chen.utils.SoarYamlUtil;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.editor.Editor;
@@ -11,14 +11,16 @@ import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.chen.constant.FileConstant.*;
 import static com.chen.constant.MessageConstants.*;
 import static com.chen.utils.DbConfigUtil.*;
 import static com.chen.utils.JdbcTableInfoUtil.testConnection;
+import static com.chen.utils.SoarYamlUtil.runSoarFixed;
+import static com.chen.utils.SoarYamlUtil.writeSqlToIdea;
 
 /**
  * 执行计划分析操作类
@@ -79,6 +81,9 @@ public class ExplainSqlAction extends AnAction {
         }
 
 
+
+
+
         try {
             // 仅支持 SELECT 语句
             if (!sql.trim().toLowerCase().startsWith("select")) {
@@ -96,10 +101,13 @@ public class ExplainSqlAction extends AnAction {
                         DIALOG_TITLE);
                 return;
             }
+            saveToCache(project, dbConfig);
+            //缓存sql文件
+            writeSqlToIdea(project, sql);
 
             String html = buildExplainHtmlWithChinese(sql, explainRows);
 
-            HtmlViewerUtil.showHtml(html, DIALOG_TITLE);
+            HtmlViewerUtil.showHtml(html, DIALOG_TITLE,runSoarFixed(project));
 
         } catch (Exception ex) {
             Messages.showErrorDialog(project,

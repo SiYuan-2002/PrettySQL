@@ -42,6 +42,7 @@
 
 
 报告示例视频：
+<video src="https://github-production-user-asset-6210df.s3.amazonaws.com/65499955/457239102-7f6132b9-ad96-4ea1-aaa2-6463b7466077.gif?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20250620%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250620T064311Z&X-Amz-Expires=300&X-Amz-Signature=bf9bb8c86229edad0aa934e29c94b4f03fad20f13163eebd1430e2404bd9f02b&X-Amz-SignedHeaders=host" controls="controls" width="500" height="300"></video>
 ![Windows_Installation](https://github-production-user-asset-6210df.s3.amazonaws.com/65499955/457239102-7f6132b9-ad96-4ea1-aaa2-6463b7466077.gif?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20250620%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250620T064311Z&X-Amz-Expires=300&X-Amz-Signature=bf9bb8c86229edad0aa934e29c94b4f03fad20f13163eebd1430e2404bd9f02b&X-Amz-SignedHeaders=host)
 
 ### 🎉 加入我们

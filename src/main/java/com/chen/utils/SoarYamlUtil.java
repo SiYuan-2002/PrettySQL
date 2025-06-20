@@ -14,8 +14,7 @@ import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static com.chen.constant.FileConstant.SOARYMAL_PATH;
-import static com.chen.constant.FileConstant.SQL_SCRIPT_FILE_NAME;
+import static com.chen.constant.FileConstant.*;
 
 /**
  * @author czh
@@ -39,8 +38,10 @@ public class SoarYamlUtil {
             }
         }
     }
+
     /**
      * 复制resources目录下的soar.exe到目标目录
+     *
      * @param targetDir 目标目录路径，例如 .idea目录的绝对路径
      * @throws IOException
      */
@@ -61,8 +62,10 @@ public class SoarYamlUtil {
             Files.copy(in, targetFile, StandardCopyOption.REPLACE_EXISTING);
         }
     }
+
     /**
      * 根据 json 配置替换 yaml 内容中的数据库连接信息
+     *
      * @param yamlTemplate yaml 模板内容字符串
      */
     public static String replaceDbConfigInYaml(DbConfig config, String yamlTemplate) {
@@ -86,8 +89,9 @@ public class SoarYamlUtil {
 
     /**
      * 写内容到用户项目的.idea目录下的soar.yaml
+     *
      * @param projectBasePath 用户项目根路径
-     * @param content 替换好的 yaml 内容
+     * @param content         替换好的 yaml 内容
      * @throws IOException
      */
     public static void writeYamlToProjectIdea(String projectBasePath, String content) throws IOException {
@@ -98,6 +102,7 @@ public class SoarYamlUtil {
 
     /**
      * 把 sqlContent 写入到用户项目 .idea/idea.sql 文件
+     *
      * @param sqlContent SQL 脚本内容
      * @throws IOException
      */
@@ -108,32 +113,51 @@ public class SoarYamlUtil {
         Files.writeString(sqlFilePath, sqlContent, StandardCharsets.UTF_8);
     }
 
+    /**
+     * 获取当前时间戳（用于生成报告文件名）
+     */
+    private static String getTimestamp() {
+        return new SimpleDateFormat(DATE_FORMAT).format(new Date());
+    }
+
+    /**
+     * 获取 .idea 目录下某个文件的完整路径
+     */
+    private static Path getIdeaPath(Project project, String fileName) {
+        return Paths.get(project.getBasePath(), IDEA_DIR, fileName);
+    }
+
+    /**
+     * 确保结果输出目录存在，若不存在则创建
+     */
+    private static File ensureResultDir(String file) throws IOException {
+        File resultDir = new File(RESULT_DIR+file);
+        if (!resultDir.exists() && !resultDir.mkdirs()) {
+            throw new IOException("无法创建结果目录 " + RESULT_DIR);
+        }
+        return resultDir;
+    }
+
+    /**
+     * 运行分析命令并返回控制台输出（不生成文件）
+     */
     public static String runSoarFixed(Project project) throws Exception {
-        String projectBasePath = project.getBasePath();
-        Path basePath = Paths.get(projectBasePath);
+        Path soarExePath = getIdeaPath(project, SOAR_EXE_NAME);
+        Path sqlFilePath = getIdeaPath(project, SQL_FILE_NAME);
 
-        // 构建 soar.exe 路径和 SQL 文件路径
-        Path soarExePath = basePath.resolve(".idea").resolve("soar.exe");
-        Path sqlFilePath = basePath.resolve(".idea").resolve("executeSqlFile.sql");
+        List<String> command = List.of(
+                soarExePath.toString(),
+                "-query=" + sqlFilePath
+        );
 
-        System.out.println("执行路径: " + soarExePath);
-        System.out.println("SQL文件路径: " + sqlFilePath);
-
-        // 构建命令参数列表
-        List<String> command = new ArrayList<>();
-        command.add(soarExePath.toString());
-        command.add("-query=" + sqlFilePath.toString());
-
-        // 创建 ProcessBuilder
         ProcessBuilder builder = new ProcessBuilder(command);
-        builder.redirectErrorStream(true); // 合并标准错误输出
+        builder.redirectErrorStream(true);
 
-        Process process = null;
         StringBuilder output = new StringBuilder();
+        Process process = null;
 
         try {
             process = builder.start();
-
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                 String line;
@@ -142,67 +166,42 @@ public class SoarYamlUtil {
                     output.append(line).append(System.lineSeparator());
                 }
             }
-
             int exitCode = process.waitFor();
             if (exitCode != 0) {
                 output.append("进程异常退出，退出码: ").append(exitCode).append(System.lineSeparator());
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             output.append("执行异常: ").append(e.getMessage()).append(System.lineSeparator());
         } finally {
-            if (process != null) {
-                process.destroy();
-            }
+            if (process != null) process.destroy();
         }
 
         return output.toString();
     }
 
+    /**
+     * 执行分析结果保存为 HTML 文件
+     */
     public static void downHtml(Project project) throws Exception {
-        String projectBasePath = project.getBasePath();
-        if (projectBasePath == null) {
-            throw new IllegalArgumentException("项目路径不能为空");
-        }
-
-        Path ideaDir = Paths.get(projectBasePath, ".idea");
-        File soarExe = ideaDir.resolve("soar.exe").toFile();
-        File sqlFile = ideaDir.resolve("executeSqlFile.sql").toFile();
+        File soarExe = getIdeaPath(project, SOAR_EXE_NAME).toFile();
+        File sqlFile = getIdeaPath(project, SQL_FILE_NAME).toFile();
 
         if (!soarExe.exists() || !sqlFile.exists()) {
             throw new FileNotFoundException("soar.exe 或 SQL 文件不存在！");
         }
 
-        // 1. 结果目录 D:\result
-        File resultDir = new File("D:\\result");
-        if (!resultDir.exists()) {
-            if (!resultDir.mkdirs()) {
-                throw new IOException("无法创建目录 D:\\result");
-            }
-        }
+        File resultDir = ensureResultDir("\\html");
+        File outputFile = new File(resultDir, REPORT_PREFIX + getTimestamp() + HTML_SUFFIX);
 
-        // 2. 构建输出文件名，包含当前时间
-        String timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new java.util.Date());
-        File outputFile = new File(resultDir, "SQL分析报告_" + timestamp + ".html");
-
-        // 3. 创建空文件（如果不存在）
-        if (!outputFile.exists()) {
-            if (!outputFile.createNewFile()) {
-                throw new IOException("无法创建报告文件：" + outputFile.getAbsolutePath());
-            }
-        }
-
-        // 4. 执行 soar 分析命令
         ProcessBuilder pb = new ProcessBuilder(
                 soarExe.getAbsolutePath(),
                 "-query=" + sqlFile.getAbsolutePath()
         );
-        pb.redirectErrorStream(true); // 合并错误输出
+        pb.redirectErrorStream(true);
 
         Process process = pb.start();
 
-        // 5. 将分析结果写入 HTML 文件
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
              BufferedWriter writer = new BufferedWriter(
@@ -215,84 +214,62 @@ public class SoarYamlUtil {
             }
         }
 
-        // 6. 校验退出码
-        int exitCode = process.waitFor();
-        if (exitCode != 0) {
-            throw new RuntimeException("执行失败，退出码：" + exitCode);
+        if (process.waitFor() != 0) {
+            throw new RuntimeException("执行失败，退出码：" + process.exitValue());
         }
 
-        // 7. 成功提示
         Messages.showInfoMessage(project, "HTML 报告生成成功：\n" + outputFile.getAbsolutePath(), "生成成功");
     }
 
+    /**
+     * 执行分析结果保存为 Markdown 文件
+     * 会修改 soar.yaml 报告类型配置，完成后再还原
+     */
     public static void downMD(Project project) throws Exception {
-        String projectBasePath = project.getBasePath();
-        if (projectBasePath == null) {
-            throw new IllegalArgumentException("项目路径不能为空");
-        }
-
-        Path ideaPath = Paths.get(projectBasePath, ".idea");
-        Path yamlPath = ideaPath.resolve("soar.yaml");
-        Path soarExePath = ideaPath.resolve("soar.exe");
-        Path sqlFilePath = ideaPath.resolve("executeSqlFile.sql");
+        Path yamlPath = getIdeaPath(project, YAML_FILE_NAME);
+        Path soarExePath = getIdeaPath(project, SOAR_EXE_NAME);
+        Path sqlFilePath = getIdeaPath(project, SQL_FILE_NAME);
 
         if (!Files.exists(yamlPath) || !Files.exists(soarExePath) || !Files.exists(sqlFilePath)) {
             throw new FileNotFoundException("配置文件、soar.exe 或 SQL 文件不存在！");
         }
 
-        // 读取 soar.yaml 并备份
-        String yamlContent = Files.readString(yamlPath, StandardCharsets.UTF_8);
-        String backupContent = yamlContent;
+        String originalYaml = Files.readString(yamlPath, StandardCharsets.UTF_8);
+        String modifiedYaml = originalYaml.replace("report-type: html", "report-type: markdown");
 
-        // 生成结果目录和带时间的文件名
-        File resultDir = new File("D:\\result");
-        if (!resultDir.exists() && !resultDir.mkdirs()) {
-            throw new IOException("无法创建结果目录 D:\\result");
+        Files.writeString(yamlPath, modifiedYaml, StandardCharsets.UTF_8);
+
+        File outputMd = new File(ensureResultDir("\\md"), REPORT_PREFIX + getTimestamp() + MD_SUFFIX);
+
+        ProcessBuilder pb = new ProcessBuilder(
+                soarExePath.toAbsolutePath().toString(),
+                "-query=" + sqlFilePath.toAbsolutePath()
+        );
+        pb.redirectErrorStream(true);
+
+        Process process = pb.start();
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+             BufferedWriter writer = new BufferedWriter(
+                     new OutputStreamWriter(new FileOutputStream(outputMd), StandardCharsets.UTF_8))) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                writer.write(line);
+                writer.newLine();
+            }
         }
 
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-        File outputMd = new File(resultDir, "SQL分析报告_" + timestamp + ".md");
-
-        try {
-            // 修改配置文件：report-type 改为 markdown
-            String modified = yamlContent.replace("report-type: html", "report-type: markdown");
-            Files.writeString(yamlPath, modified, StandardCharsets.UTF_8);
-
-            // 构造命令
-            ProcessBuilder pb = new ProcessBuilder(
-                    soarExePath.toAbsolutePath().toString(),
-                    "-query=" + sqlFilePath.toAbsolutePath()
-            );
-            pb.redirectErrorStream(true); // 合并错误输出
-
-            Process process = pb.start();
-
-            // 将结果写入 markdown 文件
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
-                 BufferedWriter writer = new BufferedWriter(
-                         new OutputStreamWriter(new FileOutputStream(outputMd), StandardCharsets.UTF_8))) {
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    writer.write(line);
-                    writer.newLine();
-                }
-            }
-
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                throw new RuntimeException("执行失败，退出码：" + exitCode);
-            }
-
-            Messages.showInfoMessage(project, "Markdown 报告生成成功：\n" + outputMd.getAbsolutePath(), "生成成功");
-
-        } finally {
-            // 恢复原始 soar.yaml 配置
-            Files.writeString(yamlPath, backupContent, StandardCharsets.UTF_8);
+        if (process.waitFor() != 0) {
+            throw new RuntimeException("执行失败，退出码：" + process.exitValue());
         }
+
+        // 恢复原 YAML
+        Files.writeString(yamlPath, originalYaml, StandardCharsets.UTF_8);
+
+        Messages.showInfoMessage(project, "Markdown 报告生成成功：\n" + outputMd.getAbsolutePath(), "生成成功");
     }
-
 
 
 }

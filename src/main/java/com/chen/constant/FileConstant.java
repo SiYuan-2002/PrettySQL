@@ -13,5 +13,14 @@ public class FileConstant {
     public static final String XML = "xml";
     public static final String SOARYMAL_PATH = ".idea/soar.yaml";
     public static final String SQL_SCRIPT_FILE_NAME = ".idea/executeSqlFile.sql";
+    public static final String IDEA_DIR = ".idea";
+    public static final String SOAR_EXE_NAME = "soar.exe";
+    public static final String SQL_FILE_NAME = "executeSqlFile.sql";
+    public static final String YAML_FILE_NAME = "soar.yaml";
+    public static final String RESULT_DIR = "D:\\result";
+    public static final String REPORT_PREFIX = "SQL分析报告_";
+    public static final String HTML_SUFFIX = ".html";
+    public static final String MD_SUFFIX = ".md";
+    public static final String DATE_FORMAT = "yyyy-MM-dd_HH-mm-ss";
 
 }

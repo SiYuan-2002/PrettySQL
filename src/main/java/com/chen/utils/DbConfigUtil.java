@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static com.chen.constant.DataSourceConstants.DB_TYPE_MYSQL;
 import static com.chen.constant.DbConstant.*;
 import static com.chen.constant.FileConstant.CONFIG_PATH;
 import static com.chen.constant.FileConstant.CONFIG_PATH_ALL;
@@ -200,7 +201,7 @@ public class DbConfigUtil {
             deleteButton.setPreferredSize(new Dimension(45, 24));
 
             // 刷新配置列表下拉框
-            Runnable refreshConfigList = () -> {
+            Consumer<Boolean> refreshConfigList = (isInit) -> {
                 configComboBox.removeAllItems();
                 String selectedType = (String) dbTypeComboBox.getSelectedItem();
                 if (selectedType != null && typeToConfigs.containsKey(selectedType)) {
@@ -208,12 +209,24 @@ public class DbConfigUtil {
                     for (DbConfig cfg : list) {
                         configComboBox.addItem(cfg.getUrl());
                     }
+
                     if (!list.isEmpty()) {
-                        configComboBox.setSelectedIndex(0);
-                        DbConfig first = list.get(0);
-                        urlField.setText(first.getUrl());
-                        usernameField.setText(first.getUsername());
-                        passwordField.setText(first.getPassword());
+                        if (isInit) {
+                            DbConfig dbConfig = loadFromCache(project);
+                            if (dbConfig != null && dbConfig.getUrl() != null &&
+                                    list.stream().anyMatch(c -> c.getUrl().equals(dbConfig.getUrl()))) {
+                                configComboBox.setSelectedItem(dbConfig.getUrl());
+                                urlField.setText(dbConfig.getUrl());
+                                usernameField.setText(dbConfig.getUsername());
+                                passwordField.setText(dbConfig.getPassword());
+                            }
+                        } else {
+                            configComboBox.setSelectedIndex(0);
+                            DbConfig first = list.get(0);
+                            urlField.setText(first.getUrl());
+                            usernameField.setText(first.getUsername());
+                            passwordField.setText(first.getPassword());
+                        }
                     }
                 }
             };
@@ -245,13 +258,13 @@ public class DbConfigUtil {
                             Messages.showErrorDialog(project, "写入配置文件失败: " + ex.getMessage(), SQL_ERROR_TITLE);
                         }
 
-                        refreshConfigList.run();
+                        refreshConfigList.accept(false);
                     }
                 }
             });
 
             // 监听选择变化
-            dbTypeComboBox.addActionListener(e -> refreshConfigList.run());
+            dbTypeComboBox.addActionListener(e -> refreshConfigList.accept(false));
             configComboBox.addActionListener(e -> {
                 String selectedType = (String) dbTypeComboBox.getSelectedItem();
                 int idx = configComboBox.getSelectedIndex();
@@ -267,8 +280,10 @@ public class DbConfigUtil {
             });
 
             // 初始化
-            dbTypeComboBox.setSelectedIndex(0);
-            refreshConfigList.run();
+            DbConfig dbConfig = loadFromCache(project);
+            String dataBase = parseDbType(dbConfig.getUrl());
+            dbTypeComboBox.setSelectedItem(dataBase);
+            refreshConfigList.accept(true);
 
             // 构造 UI 面板
             JPanel panel = new JPanel(new GridLayout(0, 1));
@@ -510,12 +525,15 @@ public class DbConfigUtil {
                 String oldJson = Files.readString(path, StandardCharsets.UTF_8);
                 DbConfig oldConfig = objectMapper.readValue(oldJson, DbConfig.class);
                 if (Objects.equals(oldConfig, config)) {
-                    String yamlTemplate = SoarYamlUtil.readYamlTemplate("soar.yaml");
-                    String replacedYaml  = SoarYamlUtil.replaceDbConfigInYaml(config, yamlTemplate);
-                    Path ideaDir = Paths.get(project.getBasePath(), ".idea");
-                    SoarYamlUtil.copySoarExeToDir(ideaDir);
-                    String userProjectPath = project.getBasePath();
-                    SoarYamlUtil.writeYamlToProjectIdea(userProjectPath, replacedYaml);
+                    String dbType = parseDbType(config.getUrl());
+                    if (DB_TYPE_MYSQL.equalsIgnoreCase(dbType)) {
+                        String yamlTemplate = SoarYamlUtil.readYamlTemplate("soar.yaml");
+                        String replacedYaml  = SoarYamlUtil.replaceDbConfigInYaml(config, yamlTemplate);
+                        Path ideaDir = Paths.get(project.getBasePath(), ".idea");
+                        SoarYamlUtil.copySoarExeToDir(ideaDir);
+                        String userProjectPath = project.getBasePath();
+                        SoarYamlUtil.writeYamlToProjectIdea(userProjectPath, replacedYaml);
+                    }
                     // 配置一致，无需保存
                     return true;
                 }
@@ -530,15 +548,19 @@ public class DbConfigUtil {
             Files.createDirectories(path.getParent());
             String json = objectMapper.writeValueAsString(config);
             Files.writeString(path, json, StandardCharsets.UTF_8);
-            String yamlTemplate = SoarYamlUtil.readYamlTemplate("soar.yaml");
-            String replacedYaml  = SoarYamlUtil.replaceDbConfigInYaml(config, yamlTemplate);
-            Path ideaDir = Paths.get(project.getBasePath(), ".idea");
-            SoarYamlUtil.copySoarExeToDir(ideaDir);
-            String userProjectPath = project.getBasePath();
-            SoarYamlUtil.writeYamlToProjectIdea(userProjectPath, replacedYaml);
+            String dbType = parseDbType(config.getUrl());
+            if (DB_TYPE_MYSQL.equalsIgnoreCase(dbType)) {
+                String yamlTemplate = SoarYamlUtil.readYamlTemplate("soar.yaml");
+                String replacedYaml  = SoarYamlUtil.replaceDbConfigInYaml(config, yamlTemplate);
+                Path ideaDir = Paths.get(project.getBasePath(), ".idea");
+                SoarYamlUtil.copySoarExeToDir(ideaDir);
+                String userProjectPath = project.getBasePath();
+                SoarYamlUtil.writeYamlToProjectIdea(userProjectPath, replacedYaml);
+            }
             return true;
 
         } catch (Exception e) {
+
             return false;
         }
     }

@@ -2,6 +2,7 @@ package com.chen.utils;
 
 import com.chen.entity.ColumnMeta;
 import com.chen.entity.DbConfig;
+import com.chen.entity.TableMeta;
 
 import java.util.List;
 import java.util.Map;
@@ -24,9 +25,9 @@ public class ColumnMetaUtils {
      * 数据库类型到字段提取方法的映射。
      * Key 为数据库类型常量，Value 为提取逻辑函数。
      */
-    private static final Map<String, BiFunction<DbConfig, String, List<ColumnMeta>>> DB_TYPE_TO_HANDLER = Map.of(
-            DB_TYPE_ORACLE, ColumnMetaUtils::getTableColumnsFromOracle,
+    private static final Map<String, BiFunction<DbConfig, String, TableMeta>> DB_TYPE_TO_HANDLER = Map.of(
             DB_TYPE_MYSQL, ColumnMetaUtils::getTableColumnsFromMySQL,
+            DB_TYPE_ORACLE, ColumnMetaUtils::getTableColumnsFromOracle,
             DB_TYPE_SQLSERVER, ColumnMetaUtils::getTableColumnsFromSqlServer
     );
 
@@ -39,9 +40,9 @@ public class ColumnMetaUtils {
      * @return 字段元数据列表
      * @throws RuntimeException 如果不支持该数据库类型
      */
-    public static List<ColumnMeta> getTableColumns(DbConfig dbConfig, String tableName) {
+    public static TableMeta getTableColumns(DbConfig dbConfig, String tableName) {
         String dbType = DbConfigUtil.parseDbType(dbConfig.getUrl());
-        BiFunction<DbConfig, String, List<ColumnMeta>> handler = DB_TYPE_TO_HANDLER.get(dbType);
+        BiFunction<DbConfig, String, TableMeta> handler = DB_TYPE_TO_HANDLER.get(dbType);
         if (handler == null) {
             throw new RuntimeException("不支持的数据库类型: " + dbType);
         }
@@ -55,7 +56,7 @@ public class ColumnMetaUtils {
      * @param tableName 表名
      * @return 字段元数据列表
      */
-    private static List<ColumnMeta> getTableColumnsFromOracle(DbConfig dbConfig, String tableName) {
+    private static TableMeta getTableColumnsFromOracle(DbConfig dbConfig, String tableName) {
         return JdbcTableInfoUtil.getTableColumnsFromOracle(dbConfig, tableName);
     }
 
@@ -66,8 +67,8 @@ public class ColumnMetaUtils {
      * @param tableName 表名
      * @return 字段元数据列表
      */
-    private static List<ColumnMeta> getTableColumnsFromMySQL(DbConfig dbConfig, String tableName) {
-        return JdbcTableInfoUtil.getTableColumnsFromMySQL(dbConfig, tableName);
+    private static TableMeta getTableColumnsFromMySQL(DbConfig dbConfig, String tableName) {
+        return JdbcTableInfoUtil.getTableMetaFromMySQL(dbConfig, tableName);
     }
 
     /**
@@ -77,7 +78,7 @@ public class ColumnMetaUtils {
      * @param tableName 表名
      * @return 字段元数据列表
      */
-    private static List<ColumnMeta> getTableColumnsFromSqlServer(DbConfig dbConfig, String tableName) {
+    private static TableMeta getTableColumnsFromSqlServer(DbConfig dbConfig, String tableName) {
         return JdbcTableInfoUtil.getTableColumnsFromSqlServer(dbConfig, tableName);
     }
 }

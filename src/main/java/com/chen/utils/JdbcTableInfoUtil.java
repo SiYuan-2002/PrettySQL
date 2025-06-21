@@ -3,6 +3,7 @@ package com.chen.utils;
 import com.chen.constant.DataSourceConstants;
 import com.chen.entity.ColumnMeta;
 import com.chen.entity.DbConfig;
+import com.chen.entity.TableMeta;
 
 import java.sql.*;
 import java.util.*;
@@ -38,7 +39,7 @@ public class JdbcTableInfoUtil {
      * @return 字段元数据列表（ColumnMeta）
      * @throws ClassNotFoundException 如果 JDBC 驱动未加载
      */
-    public static List<ColumnMeta> getTableColumnsFromMySQL(DbConfig dbConfig, String tableName) {
+    public static TableMeta getTableMetaFromMySQL(DbConfig dbConfig, String tableName) {
         try (Connection conn = DataSourceManager.getDataSource(dbConfig).getConnection()) {
             DatabaseMetaData meta = conn.getMetaData();
 
@@ -48,15 +49,27 @@ public class JdbcTableInfoUtil {
                 int idx1 = url.indexOf("/", "jdbc:mysql://".length());
                 int idx2 = url.indexOf("?", idx1);
                 if (idx1 != -1) {
-                    if (idx2 != -1) {
-                        catalog = url.substring(idx1 + 1, idx2);
-                    } else {
-                        catalog = url.substring(idx1 + 1);
+                    catalog = (idx2 != -1) ? url.substring(idx1 + 1, idx2) : url.substring(idx1 + 1);
+                }
+            }
+
+            // ✅ 获取表注释（表备注）
+            String tableComment = tableName;
+            String commentSql = "SELECT TABLE_COMMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?";
+            try (PreparedStatement ps = conn.prepareStatement(commentSql)) {
+                ps.setString(1, catalog);
+                ps.setString(2, tableName);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String comment = rs.getString("TABLE_COMMENT");
+                        if (comment != null && !comment.isBlank()) {
+                            tableComment = comment;
+                        }
                     }
                 }
             }
 
-            // 获取表的主键字段集合
+            // ✅ 获取主键字段
             Set<String> pkSet = new HashSet<>();
             try (ResultSet pkRs = meta.getPrimaryKeys(catalog, null, tableName)) {
                 while (pkRs.next()) {
@@ -64,7 +77,7 @@ public class JdbcTableInfoUtil {
                 }
             }
 
-            // 获取表所有索引字段集合
+            // ✅ 获取索引字段
             Set<String> indexSet = new HashSet<>();
             try (ResultSet idxRs = meta.getIndexInfo(catalog, null, tableName, false, false)) {
                 while (idxRs.next()) {
@@ -75,25 +88,26 @@ public class JdbcTableInfoUtil {
                 }
             }
 
-            // 获取表的字段信息
+            // ✅ 获取字段列表
             List<ColumnMeta> columns = new ArrayList<>();
             try (ResultSet rs = meta.getColumns(catalog, null, tableName, null)) {
                 while (rs.next()) {
-                    String name = rs.getString("COLUMN_NAME");    // 字段名称
-                    String type = rs.getString("TYPE_NAME");      // 字段类型
-                    String remark = rs.getString("REMARKS");      // 字段注释
-                    boolean pk = pkSet.contains(name);            // 是否为主键
-                    boolean idx = indexSet.contains(name);        // 是否为索引字段
+                    String name = rs.getString("COLUMN_NAME");
+                    String type = rs.getString("TYPE_NAME");
+                    String remark = rs.getString("REMARKS");
+                    boolean pk = pkSet.contains(name);
+                    boolean idx = indexSet.contains(name);
                     columns.add(new ColumnMeta(name, type, pk, idx, remark));
                 }
             }
 
-            return columns;
+            return new TableMeta(tableName, tableComment, columns);
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
+
 
 
     /**
@@ -103,13 +117,34 @@ public class JdbcTableInfoUtil {
      * @param tableName 表名
      * @return 字段元数据列表
      */
-    public static List<ColumnMeta> getTableColumnsFromSqlServer(DbConfig dbConfig, String tableName) {
+    public static TableMeta getTableColumnsFromSqlServer(DbConfig dbConfig, String tableName) {
         try (Connection conn = DataSourceManager.getDataSource(dbConfig).getConnection()) {
             DatabaseMetaData meta = conn.getMetaData();
 
+            // 获取当前数据库名（Catalog）
+            String catalog = conn.getCatalog();
+
+            // 表注释
+            String tableComment = tableName;
+            String commentSql = "SELECT TABLE_NAME, TABLE_SCHEMA, TABLE_CATALOG, TABLE_TYPE, REMARKS " +
+                    "FROM INFORMATION_SCHEMA.TABLES " +
+                    "WHERE TABLE_CATALOG = ? AND TABLE_NAME = ?";
+            try (PreparedStatement ps = conn.prepareStatement(commentSql)) {
+                ps.setString(1, catalog);
+                ps.setString(2, tableName);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String comment = rs.getString("REMARKS");
+                        if (comment != null && !comment.isBlank()) {
+                            tableComment = comment;
+                        }
+                    }
+                }
+            }
+
             // 主键集合
             Set<String> pkSet = new HashSet<>();
-            try (ResultSet pkRs = meta.getPrimaryKeys(null, null, tableName)) {
+            try (ResultSet pkRs = meta.getPrimaryKeys(catalog, null, tableName)) {
                 while (pkRs.next()) {
                     pkSet.add(pkRs.getString("COLUMN_NAME"));
                 }
@@ -117,7 +152,7 @@ public class JdbcTableInfoUtil {
 
             // 索引字段集合
             Set<String> indexSet = new HashSet<>();
-            try (ResultSet idxRs = meta.getIndexInfo(null, null, tableName, false, false)) {
+            try (ResultSet idxRs = meta.getIndexInfo(catalog, null, tableName, false, false)) {
                 while (idxRs.next()) {
                     String colName = idxRs.getString("COLUMN_NAME");
                     if (colName != null) {
@@ -128,18 +163,18 @@ public class JdbcTableInfoUtil {
 
             // 字段信息
             List<ColumnMeta> columns = new ArrayList<>();
-            try (ResultSet rs = meta.getColumns(null, null, tableName, null)) {
+            try (ResultSet rs = meta.getColumns(catalog, null, tableName, null)) {
                 while (rs.next()) {
                     String name = rs.getString("COLUMN_NAME");
                     String type = rs.getString("TYPE_NAME");
-                    String remark = rs.getString("REMARKS"); // SQL Server 可能为空
+                    String remark = rs.getString("REMARKS");
                     boolean pk = pkSet.contains(name);
                     boolean idx = indexSet.contains(name);
                     columns.add(new ColumnMeta(name, type, pk, idx, remark));
                 }
             }
 
-            return columns;
+            return new TableMeta(tableName, tableComment, columns);
         } catch (SQLException e) {
             throw new RuntimeException("获取 SQL Server 字段失败: " + e.getMessage(), e);
         }
@@ -155,24 +190,41 @@ public class JdbcTableInfoUtil {
      * @param tableName 表名
      * @return 字段元数据列表
      */
-    public static List<ColumnMeta> getTableColumnsFromOracle(DbConfig dbConfig, String tableName) {
+    public static TableMeta getTableColumnsFromOracle(DbConfig dbConfig, String tableName) {
         List<ColumnMeta> columns = new ArrayList<>();
         Set<String> pkSet = new HashSet<>();
         Set<String> indexSet = new HashSet<>();
+        String schema = dbConfig.getUsername().toUpperCase();
+        String upperTableName = tableName.toUpperCase();
+        String tableComment = tableName;
 
         try (Connection conn = DataSourceManager.getDataSource(dbConfig).getConnection()) {
             DatabaseMetaData meta = conn.getMetaData();
-            String schema = dbConfig.getUsername().toUpperCase();
 
-            // 获取主键集合
-            try (ResultSet pkRs = meta.getPrimaryKeys(null, schema, tableName.toUpperCase())) {
+            // 表注释
+            String commentSql = "SELECT COMMENTS FROM ALL_TAB_COMMENTS WHERE OWNER = ? AND TABLE_NAME = ?";
+            try (PreparedStatement ps = conn.prepareStatement(commentSql)) {
+                ps.setString(1, schema);
+                ps.setString(2, upperTableName);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String comment = rs.getString("COMMENTS");
+                        if (comment != null && !comment.isBlank()) {
+                            tableComment = comment;
+                        }
+                    }
+                }
+            }
+
+            // 主键字段
+            try (ResultSet pkRs = meta.getPrimaryKeys(null, schema, upperTableName)) {
                 while (pkRs.next()) {
                     pkSet.add(pkRs.getString("COLUMN_NAME"));
                 }
             }
 
-            // 获取索引字段集合
-            try (ResultSet idxRs = meta.getIndexInfo(null, schema, tableName.toUpperCase(), false, false)) {
+            // 索引字段
+            try (ResultSet idxRs = meta.getIndexInfo(null, schema, upperTableName, false, false)) {
                 while (idxRs.next()) {
                     String colName = idxRs.getString("COLUMN_NAME");
                     if (colName != null) {
@@ -181,17 +233,15 @@ public class JdbcTableInfoUtil {
                 }
             }
 
-            // 获取列及类型及注释
+            // 字段信息（带注释）
             String columnSql = "SELECT col.COLUMN_NAME, col.DATA_TYPE, com.COMMENTS " +
                     "FROM ALL_TAB_COLUMNS col " +
                     "LEFT JOIN ALL_COL_COMMENTS com " +
                     "ON col.OWNER = com.OWNER AND col.TABLE_NAME = com.TABLE_NAME AND col.COLUMN_NAME = com.COLUMN_NAME " +
                     "WHERE col.OWNER = ? AND col.TABLE_NAME = ?";
-
             try (PreparedStatement ps = conn.prepareStatement(columnSql)) {
                 ps.setString(1, schema);
-                ps.setString(2, tableName.toUpperCase());
-
+                ps.setString(2, upperTableName);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         String name = rs.getString("COLUMN_NAME");
@@ -207,8 +257,9 @@ public class JdbcTableInfoUtil {
             throw new RuntimeException("获取 Oracle 字段失败: " + e.getMessage(), e);
         }
 
-        return columns;
+        return new TableMeta(tableName, tableComment, columns);
     }
+
 
 
     /**
@@ -219,7 +270,7 @@ public class JdbcTableInfoUtil {
      * @return 字段元数据列表
      * @throws Exception 如果获取失败
      */
-    public static List<ColumnMeta> getTableColumns(DbConfig dbConfig, String tableName) throws Exception {
+    public static TableMeta getTableColumns(DbConfig dbConfig, String tableName) throws Exception {
         return ColumnMetaUtils.getTableColumns(dbConfig, tableName);
     }
 

@@ -3,6 +3,7 @@ package com.chen.action;
 import com.chen.constant.MessageConstants;
 import com.chen.entity.ColumnMeta;
 import com.chen.entity.DbConfig;
+import com.chen.entity.TableMeta;
 import com.chen.utils.JdbcTableInfoUtil;
 import com.intellij.lang.documentation.AbstractDocumentationProvider;
 import com.intellij.lang.documentation.DocumentationProvider;
@@ -89,8 +90,11 @@ public class SqlTableDocumentationProvider extends AbstractDocumentationProvider
         }
 
         List<ColumnMeta> columns;
+        String tableRemark = null;
         try {
-            columns = JdbcTableInfoUtil.getTableColumns(dbConfig, tableName);
+            TableMeta tableColumns = JdbcTableInfoUtil.getTableColumns(dbConfig, tableName);
+            columns = tableColumns.getColumns();
+            tableRemark = tableColumns.getTableComment();
         } catch (Exception e) {
             return ERROR_PREFIX + tableName + DATASOURCE + dbConfig.getUrl() + e.getMessage();
         }
@@ -99,14 +103,14 @@ public class SqlTableDocumentationProvider extends AbstractDocumentationProvider
             return ERROR_PREFIX + tableName + DATASOURCE + dbConfig.getUrl() + ERROR_NO_COLUMNS;
         }
 
-        return buildHtmlTable(tableName, columns);
+        return buildHtmlTable(tableName,tableRemark, columns);
     }
 
 
     /**
      * 构建表结构的 HTML 表格展示
      */
-    private String buildHtmlTable(String tableName, List<ColumnMeta> columns) {
+    private String buildHtmlTable(String tableName, String tableRemark,List<ColumnMeta> columns) {
         StringBuilder html = new StringBuilder();
         html.append("<style>")
                 .append(".db-table { width:100%; border-collapse:collapse; font-family:'Segoe UI',Arial,sans-serif; background:#23272f; border: 1px solid #444b58; }")
@@ -118,7 +122,10 @@ public class SqlTableDocumentationProvider extends AbstractDocumentationProvider
                 .append(".db-table .idx { color:#4CAF50; font-weight:bold; }")
                 .append("</style>");
 
-        html.append("<b style='font-size:1.1em;color:#e1eaff;'>表名：</b> ").append(tableName).append("<br>");
+        html.append("<b style='font-size:1.1em;color:#e1eaff;'>表名：</b> ")
+                .append(tableName)
+                .append(tableRemark != null && !tableRemark.isBlank() ? "（" + tableRemark + "）" : "")
+                .append("<br>");
         html.append("<table class='db-table'><thead><tr>")
                 .append("<th style='width: 25%;'>字段名称</th>")
                 .append("<th style='width: 20%;'>类型</th>")

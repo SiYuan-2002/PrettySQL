@@ -161,7 +161,6 @@ public class DbConfigUtil {
      * @param callback 用户输入完成回调
      */
     public static void promptUserInputWithDbType(Project project, Consumer<DbConfig> callback) {
-        Boolean status=false;
         ApplicationManager.getApplication().invokeLater(() -> {
             List<DbConfig> configs = new ArrayList<>();
             Path path = Paths.get(project.getBasePath(), CONFIG_PATH_ALL);

@@ -1,58 +1,34 @@
-# PrettySQL - A Powerful SQL Assistant Plugin for IntelliJ IDEA
+# PrettySQL - Powerful SQL Plugin for IntelliJ
 
-> PrettySQL is a lightweight IntelliJ IDEA plugin designed to enhance your SQL development experience. It provides SQL formatting, table structure tooltips, multi-datasource support, and rich SQL inspection features — ideal for developers who frequently deal with SQL in their daily work.
+> PrettySQL is a lightweight IntelliJ plugin designed to enhance SQL development. It integrates features like SQL formatting, table structure tooltips, syntax checking, and execution plan analysis to provide a cleaner, more visual, and efficient SQL development experience.
 
-[📚 Documentation](http://czh.znunwm.top/) | [🐛 Report Issues](https://github.com/SiYuan-2002/PrettySQL/issues)
+[📚 Documentation](http://czh.znunwm.top/) | [🐛 Report Issues](https://github.com/SiYuan-2002/PrettySQL/issues) | 🇨🇳 [简体中文](https://github.com/SiYuan-2002/PrettySQL/blob/master/README.md)
 
-> 💡 This project is updated almost daily. If you like it, please give it a 🌟 Star to support continuous development!
-
----
 
 ## 🔧 Features
 
-- Automatic SQL formatting
-- Hover table name to view structure
-- Multi-datasource configuration
-- SQL syntax validation
+- Beautify SQL statements with a single click
+- Table structure tooltip when hovering over table names
+- Support for multiple data sources
+- SQL syntax checking
 - SQL execution plan analysis
-- SQL inspection report generation
+- SQL check report generation
 
-Explore more in the [Documentation Center](http://czh.znunwm.top/).
-
----
+For more features, visit the [Documentation Center](http://czh.znunwm.top/).
 
 ## 🚀 Getting Started
 
-> ⚠️ Currently not compatible with IntelliJ IDEA versions **below 2022.2.2**
+PrettySQL supports JetBrains IDEs like **IntelliJ IDEA**, **PyCharm**, **CLion**, **DataGrip**, etc. (Currently not compatible with versions earlier than IntelliJ IDEA 2022.2.2)
 
-### 📦 Installation (Online)
+### Installation Steps
 
-1. Open IntelliJ IDEA (or compatible JetBrains IDE such as PyCharm, CLion, or DataGrip).
-2. Navigate to `File → Settings → Plugins` (or `Preferences` on macOS).
-3. Search for `PrettySQL` in the Marketplace.
-4. Click **Install**, then restart your IDE.
-
-### 📁 Manual Installation (Offline)
-
-Download the latest release from [GitHub Releases](https://github.com/SiYuan-2002/PrettySQL/releases/tag/1.7) and install the `.zip` or `.jar` manually in the plugin settings.
-
----
-
-## ✨ How to Use
-
-1. **SQL Formatting**  
-   Right-click inside an XML or SQL file containing SQL text → Select `Format SQL`.
-
-2. **Datasource Setup**  
-   If `soar.yaml` configuration is present, it's loaded by default. Otherwise, you can right-click to configure the datasource manually.
-
-3. **Table Structure Tooltip**  
-   Hover over a table name in your SQL — a popup with the table structure will appear.
-
-4. **SQL Check**  
-   Select an SQL block and right-click → Choose `SQL Check` (DML operations are not executed).
-
----
+1. Open your JetBrains IDE and go to **File → Settings → Plugins** (or **Preferences** on macOS)
+2. Search for **PrettySQL** in the plugin marketplace and click **Install**
+3. Restart your IDE after installation
+4. Right-click SQL inside XML files to format them (supports selected XML tags)
+5. If a `yml` config file is present, it's used automatically. Otherwise, a popup window will guide you to add a data source
+6. Hover over a table name to view its structure tooltip
+7. Right-click SQL to check syntax and execution plan (DML will not be committed)
 
 ## 🖼️ Screenshots
 
@@ -64,19 +40,19 @@ Download the latest release from [GitHub Releases](https://github.com/SiYuan-200
   <img src="https://znunwm.top/upload/2025/06/de217a72-635d-4602-8967-79a8ff9761d4.png" width="800" height="300" />
 </div>
 
+## 🤝 Join Us
+
+PrettySQL is continuously evolving. Contributions are welcome — whether it's feedback, feature suggestions, or pull requests.
+
+The project is open-sourced under the **Apache-2.0 License**, free to use with no commercial restrictions.
+
+If you're interested in joining or helping out, feel free to reach out with your ideas!
+
 ---
 
-## 💬 Contributing
+## ☕ Support the Author
 
-PrettySQL is under active development and welcomes community contributions. We use the [Apache-2.0 License](https://opensource.org/licenses/Apache-2.0), so you're free to use and distribute it.
-
-Whether you want to suggest features, report bugs, or submit a pull request — we appreciate your participation.
-
----
-
-## ☕ Support the Developer
-
-If you find this plugin helpful, consider buying the author a coffee to show your support!
+If you find PrettySQL helpful, consider buying a coffee to support continued development ❤️
 
 <div style="display: flex; gap: 15px; align-items: flex-start; margin-top: 20px;">
   <img src="https://znunwm.top/upload/2025/06/8238FF3AA44B75D07E56D155B41F9613.jpg" width="350" height="400" />

@@ -162,7 +162,6 @@ public class SoarYamlUtil {
                     new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    System.out.println(line);
                     output.append(line).append(System.lineSeparator());
                 }
             }
@@ -196,7 +195,8 @@ public class SoarYamlUtil {
 
         ProcessBuilder pb = new ProcessBuilder(
                 soarExe.getAbsolutePath(),
-                "-query=" + sqlFile.getAbsolutePath()
+                "-query=" + sqlFile.getAbsolutePath(),
+                "-log-output=stdout"
         );
         pb.redirectErrorStream(true);
 
@@ -243,7 +243,8 @@ public class SoarYamlUtil {
 
         ProcessBuilder pb = new ProcessBuilder(
                 soarExePath.toAbsolutePath().toString(),
-                "-query=" + sqlFilePath.toAbsolutePath()
+                "-query=" + sqlFilePath.toAbsolutePath(),
+                "-log-output=stdout"
         );
         pb.redirectErrorStream(true);
 
@@ -269,6 +270,57 @@ public class SoarYamlUtil {
         Files.writeString(yamlPath, originalYaml, StandardCharsets.UTF_8);
 
         Messages.showInfoMessage(project, "Markdown 报告生成成功：\n" + outputMd.getAbsolutePath(), "生成成功");
+    }
+
+    /**
+     * 重写 SQL 并直接在弹窗中展示（不写入文件）
+     */
+    public static String rewriteSQL(Project project) throws Exception {
+
+        Path yamlPath = getIdeaPath(project, YAML_FILE_NAME);
+        Path soarExePath = getIdeaPath(project, SOAR_EXE_NAME);
+        Path sqlFilePath = getIdeaPath(project, SQL_FILE_NAME);
+
+        if (!Files.exists(yamlPath) || !Files.exists(soarExePath) || !Files.exists(sqlFilePath)) {
+            throw new FileNotFoundException("配置文件、soar.exe 或 SQL 文件不存在！");
+        }
+
+        String originalYaml = Files.readString(yamlPath, StandardCharsets.UTF_8);
+        String modifiedYaml = originalYaml.replace("report-type: html", "report-type: rewrite");
+        Files.writeString(yamlPath, modifiedYaml, StandardCharsets.UTF_8);
+        List<String> command = List.of(
+                soarExePath.toString(),
+                "-query=" + sqlFilePath,
+                "-log-output=stdout"
+        );
+
+        ProcessBuilder builder = new ProcessBuilder(command);
+        builder.redirectErrorStream(true);
+
+        StringBuilder output = new StringBuilder();
+        Process process = null;
+
+        try {
+            process = builder.start();
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append(System.lineSeparator());
+                }
+            }
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                output.append("进程异常退出，退出码: ").append(exitCode).append(System.lineSeparator());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            output.append("执行异常: ").append(e.getMessage()).append(System.lineSeparator());
+        } finally {
+            if (process != null) process.destroy();
+        }
+
+        return output.toString();
     }
 
 

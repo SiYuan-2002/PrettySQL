@@ -36,5 +36,7 @@ public class MessageConstants {
     public static final String WARN_NOT_SELECT = "执行计划只支持 SELECT 语句";
     public static final String INFO_NO_RESULT = "执行计划无结果";
     public static final String ERROR_ANALYZE_FAIL_PREFIX = "执行计划分析失败：";
+    public static final String DELETE_SUCCESS_MESSAGE = "数据源配置已删除";
+    public static final String DELETE_SUCCESS_TITLE = "删除成功";
 }
 

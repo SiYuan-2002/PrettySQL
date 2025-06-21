@@ -161,6 +161,7 @@ public class DbConfigUtil {
      * @param callback 用户输入完成回调
      */
     public static void promptUserInputWithDbType(Project project, Consumer<DbConfig> callback) {
+        Boolean status=false;
         ApplicationManager.getApplication().invokeLater(() -> {
             List<DbConfig> configs = new ArrayList<>();
             Path path = Paths.get(project.getBasePath(), CONFIG_PATH_ALL);
@@ -213,8 +214,7 @@ public class DbConfigUtil {
                     if (!list.isEmpty()) {
                         if (isInit) {
                             DbConfig dbConfig = loadFromCache(project);
-                            if (dbConfig != null && dbConfig.getUrl() != null &&
-                                    list.stream().anyMatch(c -> c.getUrl().equals(dbConfig.getUrl()))) {
+                            if (dbConfig != null) {
                                 configComboBox.setSelectedItem(dbConfig.getUrl());
                                 urlField.setText(dbConfig.getUrl());
                                 usernameField.setText(dbConfig.getUsername());
@@ -254,6 +254,7 @@ public class DbConfigUtil {
                                     .flatMap(Collection::stream).collect(Collectors.toList());
                             String newJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(allConfigs);
                             Files.writeString(path, newJson, StandardCharsets.UTF_8);
+                            Messages.showInfoMessage(project, DELETE_SUCCESS_MESSAGE, DELETE_SUCCESS_TITLE);
                         } catch (IOException ex) {
                             Messages.showErrorDialog(project, "写入配置文件失败: " + ex.getMessage(), SQL_ERROR_TITLE);
                         }
@@ -281,9 +282,14 @@ public class DbConfigUtil {
 
             // 初始化
             DbConfig dbConfig = loadFromCache(project);
+            if(dbConfig == null) {
+                dbConfig= configs.isEmpty() ? null :
+                        configs.get(new Random().nextInt(configs.size()));
+            }
             String dataBase = parseDbType(dbConfig.getUrl());
             dbTypeComboBox.setSelectedItem(dataBase);
             refreshConfigList.accept(true);
+
 
             // 构造 UI 面板
             JPanel panel = new JPanel(new GridLayout(0, 1));
@@ -328,7 +334,6 @@ public class DbConfigUtil {
                 if (!StringUtils.notBlankAndNotNullStr(dbType)) errorList.add("数据库类型");
 
                 if (errorList.isEmpty()) {
-                    url += appendUrlFix(parseDbType(url), url);
                     callback.accept(new DbConfig(url, username, password));
                     break;
                 } else {
@@ -651,5 +656,9 @@ public class DbConfigUtil {
             throw new IllegalArgumentException("无效的 JDBC URL: " + url);
         }
         return url.split(":")[1].toLowerCase();
+    }
+    public static String removeUrlFix(String url) {
+        int idx = url.indexOf("?");
+        return (idx != -1) ? url.substring(0, idx) : url;
     }
 }

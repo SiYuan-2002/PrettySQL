@@ -30,15 +30,15 @@
 
 3.鼠标放到要查看表结构的表名称,悬浮即可出现
 
-3.选择xml文件里的sql语句右键SQL检查(DML事务不会提交)
+4.选择xml文件里的sql语句右键SQL检查(DML事务不会提交)
 
 
 <div style="display: flex; gap: 15px; align-items: flex-start;">
-  <img src="https://znunwm.top/upload/2025/06/50265270-d2d4-47dc-8a6d-799a14ee2024.png" width="800" height="300" />
-  <img src="https://znunwm.top/upload/2025/06/c805b2e8-6d34-4eb8-b342-dbb5f00eba5d.png" width="500" height="300" />
-  <img src="https://znunwm.top/upload/2025/06/ff0d5cb0-bd1f-4f30-bcfc-a749ebf37c6b.png" width="800" height="300" />
+  <img src="https://znunwm.top/upload/2025/06/ad1161b5-10d4-4b8c-b7d3-a588826859b5.png" width="800" height="600" />
+  <img src="https://znunwm.top/upload/2025/06/1f83eeb7-90d3-4949-91ce-a452a9d1ccdb.png" width="800" height="800" />
   <img src="https://znunwm.top/upload/2025/06/2c772845-48ad-4004-b1a5-3fa523a021ac.png" width="400" height="300" />
-  <img src="https://znunwm.top/upload/2025/06/de217a72-635d-4602-8967-79a8ff9761d4.png" width="800" height="300" />
+  <img src="https://znunwm.top/upload/2025/06/b089a07a-6729-40b3-a9a4-676086ad7312.png" width="800" height="400" />
+  <img src="https://github-production-user-asset-6210df.s3.amazonaws.com/65499955/457578024-25784ec7-6183-4129-a4e3-c0a66564fdc9.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20250621%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250621T122058Z&X-Amz-Expires=300&X-Amz-Signature=0b63d12131887c9ff03fd33c17dd631bec71b025e2588e80b396d2794980d8b1&X-Amz-SignedHeaders=host" width="1500" height="800" />
 </div>
 
 ### 🎉 加入我们

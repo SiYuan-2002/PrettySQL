@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.chen.constant.FileConstant.*;
@@ -157,11 +158,16 @@ public class SoarYamlUtil {
         Process process = null;
 
         try {
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            output.append("执行时间: ").append(dtf.format(java.time.LocalDateTime.now())).append(System.lineSeparator());
             process = builder.start();
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
+                    if (line.contains("beelogger") || line.contains("jsonconfig must have filename") || line.contains("a:link")) {
+                        continue;
+                    }
                     output.append(line).append(System.lineSeparator());
                 }
             }
@@ -175,7 +181,6 @@ public class SoarYamlUtil {
         } finally {
             if (process != null) process.destroy();
         }
-
         return output.toString();
     }
 

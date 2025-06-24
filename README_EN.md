@@ -13,6 +13,7 @@
 - SQL syntax checking
 - SQL execution plan analysis
 - SQL check report generation
+- ER diagram generation
 
 For more features, visit the [Documentation Center](http://czh.znunwm.top/).
 

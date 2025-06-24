@@ -22,5 +22,7 @@ public class FileConstant {
     public static final String HTML_SUFFIX = ".html";
     public static final String MD_SUFFIX = ".md";
     public static final String DATE_FORMAT = "yyyy-MM-dd_HH-mm-ss";
+    public static final String D3_JS_PATH = "static/js/d3.v7.min.js";
+    public static final String DAGRE_JS_PATH = "static/js/dagre-d3.min.js";
 
 }

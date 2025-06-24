@@ -445,7 +445,6 @@ public class DbConfigUtil {
 
             if (errorList.isEmpty()) {
                 url += appendUrlFix(parseDbType(url), url);
-                System.out.println(url);
                 callback.accept(new DbConfig(url, username, password));
                 saveToCache(project, new DbConfig(url, username, password));
                 saveToCacheAppend(project, new DbConfig(url, username, password));

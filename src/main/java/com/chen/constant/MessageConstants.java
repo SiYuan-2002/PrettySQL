@@ -38,5 +38,7 @@ public class MessageConstants {
     public static final String ERROR_ANALYZE_FAIL_PREFIX = "执行计划分析失败：";
     public static final String DELETE_SUCCESS_MESSAGE = "数据源配置已删除";
     public static final String DELETE_SUCCESS_TITLE = "删除成功";
+    public static final String NO_DB_CONFIG_HTML = "<html><body><h2 style='color:red;'>请先配置或者新增数据库连接！</h2></body></html>";
+
 }
 

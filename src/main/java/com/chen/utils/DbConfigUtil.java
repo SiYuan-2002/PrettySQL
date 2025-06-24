@@ -284,6 +284,7 @@ public class DbConfigUtil {
             if(dbConfig == null) {
                 dbConfig= configs.isEmpty() ? null :
                         configs.get(new Random().nextInt(configs.size()));
+                saveToCache(project, dbConfig);
             }
             String dataBase = parseDbType(dbConfig.getUrl());
             dbTypeComboBox.setSelectedItem(dataBase);
@@ -527,6 +528,12 @@ public class DbConfigUtil {
             // 优先判断：如果已有缓存且内容一致，则跳过所有操作，提升性能
             if (Files.exists(path)) {
                 String oldJson = Files.readString(path, StandardCharsets.UTF_8);
+                if (oldJson == null || oldJson.trim().isEmpty()) {
+                    // 直接写入新的配置，跳过解析
+                    String newJson = objectMapper.writeValueAsString(config);
+                    Files.writeString(path, newJson, StandardCharsets.UTF_8);
+                    return true;
+                }
                 DbConfig oldConfig = objectMapper.readValue(oldJson, DbConfig.class);
                 if (Objects.equals(oldConfig, config)) {
                     String dbType = parseDbType(config.getUrl());
@@ -643,6 +650,9 @@ public class DbConfigUtil {
             Path path = Paths.get(project.getBasePath(), CONFIG_PATH);
             if (!Files.exists(path)) return null;
             String json = Files.readString(path, StandardCharsets.UTF_8);
+            if (json.isEmpty()) {
+                return null;
+            }
             return objectMapper.readValue(json, DbConfig.class);
         } catch (Exception ignored) {
             ignored.printStackTrace();

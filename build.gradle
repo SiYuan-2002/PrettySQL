@@ -41,6 +41,6 @@ tasks.withType(JavaCompile) {
 
 patchPluginXml {
     //注意这个版本号不能高于上面intellij的version,否则runIde会报错
-    sinceBuild = '191'
+    sinceBuild = '222'
     untilBuild = '252.*'
 }

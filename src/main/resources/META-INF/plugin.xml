@@ -9,7 +9,7 @@
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="2766694258@qq.com" url="https://znunwm.top">陈思源</vendor>
-    <idea-version since-build="191" until-build="252.*"/>
+    <idea-version since-build="222" until-build="252.*"/>
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
@@ -76,7 +76,14 @@ PrettySQL is an IntelliJ plugin that beautifies and formats SQL queries automati
             <add-to-group group-id="SqlToolRootGroup" anchor="after" relative-to-action="CheckSqlAction"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt P"/>
         </action>
-
+        <!-- SQL 执行计划分析 -->
+        <action id="ShowERDiagramAction"
+                class="com.chen.action.ShowERDiagramAction"
+                text="ER图"
+                description="er图">
+            <add-to-group group-id="SqlToolRootGroup" anchor="after" relative-to-action="ExplainSqlAction"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt Q"/>
+        </action>
 
 
         <!-- 二级菜单：数据库配置 -->
@@ -84,7 +91,7 @@ PrettySQL is an IntelliJ plugin that beautifies and formats SQL queries automati
                text="数据库配置"
                description="数据库连接相关设置"
                popup="true">
-            <add-to-group group-id="SqlToolRootGroup" anchor="after" relative-to-action="ExplainSqlAction"/>
+            <add-to-group group-id="SqlToolRootGroup" anchor="after" relative-to-action="ShowERDiagramAction"/>
         </group>
 
         <!-- 数据源新增 -->

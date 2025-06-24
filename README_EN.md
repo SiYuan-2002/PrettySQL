@@ -46,7 +46,7 @@ PrettySQL supports JetBrains IDEs like **IntelliJ IDEA**, **PyCharm**, **CLion**
 
 PrettySQL is continuously evolving. Contributions are welcome — whether it's feedback, feature suggestions, or pull requests.
 
-The project is open-sourced under the **Apache-2.0 License**, free to use with no commercial restrictions.
+**This project is for learning and personal use only. Commercial use and re-publishing (including uploading to any marketplace or app store) are strictly prohibited without explicit permission from the author.**
 
 If you're interested in joining or helping out, feel free to reach out with your ideas!
 

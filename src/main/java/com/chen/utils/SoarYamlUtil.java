@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 
 import java.io.*;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,6 +38,13 @@ public class SoarYamlUtil {
                 }
                 return sb.toString();
             }
+        }
+    }
+
+    public static String readResourceFile(String path) throws IOException {
+        try (InputStream is = SoarYamlUtil.class.getClassLoader().getResourceAsStream(path)) {
+            if (is == null) throw new IOException("资源文件未找到: " + path);
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
         }
     }
 

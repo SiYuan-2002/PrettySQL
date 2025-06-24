@@ -286,6 +286,9 @@ public class DbConfigUtil {
                         configs.get(new Random().nextInt(configs.size()));
                 saveToCache(project, dbConfig);
             }
+            if (dbConfig == null) {
+                JOptionPane.showMessageDialog(null, "请先添加数据源！", "提示", JOptionPane.WARNING_MESSAGE);
+            }
             String dataBase = parseDbType(dbConfig.getUrl());
             dbTypeComboBox.setSelectedItem(dataBase);
             refreshConfigList.accept(true);

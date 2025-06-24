@@ -149,74 +149,74 @@ public class ERDiagramToolWindowFactory implements ToolWindowFactory {
     }
 
     private static final String HTML_TEMPLATE = """
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset=\"UTF-8\" />
-    <title>ER 图</title>
-    <script src=\"https://d3js.org/d3.v7.min.js\"></script>
-    <script src=\"https://unpkg.com/dagre-d3@0.6.4/dist/dagre-d3.min.js\"></script>
-    <style>
-        html, body { margin:0; padding:0; width:100vw; height:100vh; background:#1e1e1e; overflow:hidden; }
-        svg { width: 100%%; height: 100%%; cursor: grab; user-select: none; }
-        .node rect { fill:#4e88af; stroke:#333; stroke-width:1.5px; rx:8; ry:8; cursor:move; }
-        .node text { fill:white; font-family:monospace; font-size:12px; white-space:pre; pointer-events: none; }
-        .edgePath path { stroke:#ccc; stroke-width:1.5px; fill:none; }
-        .edgeLabel text { fill:#ccc; font-size:11px; }
-    </style>
-</head>
-<body>
-<svg id=\"svg-canvas\">
-    <g id=\"graph-container\"></g>
-</svg>
-<script>
-    const g = new dagreD3.graphlib.Graph().setGraph({
-        rankdir: \"LR\", nodesep: 40, ranksep: 100, marginx: 20, marginy: 20
-    });
-    %s
-    %s
-    const svg = d3.select(\"#svg-canvas\");
-    const inner = svg.select(\"#graph-container\");
-    const render = new dagreD3.render();
-    render(inner, g);
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset=\"UTF-8\" />
+                <title>ER 图</title>
+                <script src=\"https://d3js.org/d3.v7.min.js\"></script>
+                <script src=\"https://unpkg.com/dagre-d3@0.6.4/dist/dagre-d3.min.js\"></script>
+                <style>
+                    html, body { margin:0; padding:0; width:100vw; height:100vh; background:#1e1e1e; overflow:hidden; }
+                    svg { width: 100%%; height: 100%%; cursor: grab; user-select: none; }
+                    .node rect { fill:#4e88af; stroke:#333; stroke-width:1.5px; rx:8; ry:8; cursor:move; }
+                    .node text { fill:white; font-family:monospace; font-size:12px; white-space:pre; pointer-events: none; }
+                    .edgePath path { stroke:#ccc; stroke-width:1.5px; fill:none; }
+                    .edgeLabel text { fill:#ccc; font-size:11px; }
+                </style>
+            </head>
+            <body>
+            <svg id=\"svg-canvas\">
+                <g id=\"graph-container\"></g>
+            </svg>
+            <script>
+                const g = new dagreD3.graphlib.Graph().setGraph({
+                    rankdir: \"LR\", nodesep: 40, ranksep: 100, marginx: 20, marginy: 20
+                });
+                %s
+                %s
+                const svg = d3.select(\"#svg-canvas\");
+                const inner = svg.select(\"#graph-container\");
+                const render = new dagreD3.render();
+                render(inner, g);
 
-    inner.selectAll(\"g.node\")
-        .attr(\"transform\", d => {
-            const node = g.node(d);
-            node.x = node.x || 0;
-            node.y = node.y || 0;
-            return `translate(${node.x},${node.y})`;
-        });
+                inner.selectAll(\"g.node\")
+                    .attr(\"transform\", d => {
+                        const node = g.node(d);
+                        node.x = node.x || 0;
+                        node.y = node.y || 0;
+                        return `translate(${node.x},${node.y})`;
+                    });
 
-    const zoom = d3.zoom()
-        .scaleExtent([0.1, 2])
-        .on(\"zoom\", event => {
-            inner.attr(\"transform\", event.transform);
-        });
-    svg.call(zoom);
-    svg.call(zoom.transform, d3.zoomIdentity.translate(20, 20).scale(1));
+                const zoom = d3.zoom()
+                    .scaleExtent([0.1, 2])
+                    .on(\"zoom\", event => {
+                        inner.attr(\"transform\", event.transform);
+                    });
+                svg.call(zoom);
+                svg.call(zoom.transform, d3.zoomIdentity.translate(20, 20).scale(1));
 
-    const drag = d3.drag()
-        .on(\"drag\", (event, nodeId) => {
-            const node = g.node(nodeId);
-            node.x += event.dx;
-            node.y += event.dy;
-            inner.select(`g.node[id='${nodeId}']`).attr(\"transform\", `translate(${node.x},${node.y})`);
-            inner.selectAll(\"g.edgePath\").each(function(d) {
-                const edge = g.edge(d);
-                const sourceNode = g.node(d.v);
-                const targetNode = g.node(d.w);
-                if (!sourceNode || !targetNode) return;
-                const path = `M${sourceNode.x},${sourceNode.y}L${targetNode.x},${targetNode.y}`;
-                d3.select(this).select(\"path\").attr(\"d\", path);
-            });
-        });
+                const drag = d3.drag()
+                    .on(\"drag\", (event, nodeId) => {
+                        const node = g.node(nodeId);
+                        node.x += event.dx;
+                        node.y += event.dy;
+                        inner.select(`g.node[id='${nodeId}']`).attr(\"transform\", `translate(${node.x},${node.y})`);
+                        inner.selectAll(\"g.edgePath\").each(function(d) {
+                            const edge = g.edge(d);
+                            const sourceNode = g.node(d.v);
+                            const targetNode = g.node(d.w);
+                            if (!sourceNode || !targetNode) return;
+                            const path = `M${sourceNode.x},${sourceNode.y}L${targetNode.x},${targetNode.y}`;
+                            d3.select(this).select(\"path\").attr(\"d\", path);
+                        });
+                    });
 
-    inner.selectAll(\"g.node\")
-        .attr(\"id\", d => d)
-        .call(drag);
-</script>
-</body>
-</html>
-""";
+                inner.selectAll(\"g.node\")
+                    .attr(\"id\", d => d)
+                    .call(drag);
+            </script>
+            </body>
+            </html>
+            """;
 }

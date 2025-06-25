@@ -22,6 +22,12 @@ public class SqlParamUtils {
     public static final String SQL_MULTILINE_REGEX = "(\\r?\\n){2,}";
     public static final String SET_BLOCK_REGEX = "<set>([\\s\\S]*?)</set>";
 
+    /**
+     * 提取 SQL 中的参数名
+     *
+     * @param sql SQL字符串
+     * @return 参数名集合，按出现顺序
+     */
     public static Set<String> extractParams(String sql) {
         Set<String> params = new LinkedHashSet<>();
         Matcher matcher = Pattern.compile(PARAM_REGEX).matcher(sql);
@@ -29,6 +35,13 @@ public class SqlParamUtils {
         return params;
     }
 
+    /**
+     * 根据参数值渲染最终 SQL，支持 if/foreach/set 模板语法
+     *
+     * @param sql         SQL模板
+     * @param paramValues 参数值映射
+     * @return 渲染后的 SQL
+     */
     public static String buildFinalSql(String sql, Map<String, Object> paramValues) {
         sql = processIfBlocks(sql, paramValues);
         sql = processForeachBlocks(sql, paramValues);
@@ -51,10 +64,24 @@ public class SqlParamUtils {
                 .trim();
     }
 
+    /**
+     * 判断字符串是否为数字
+     *
+     * @param s 输入字符串
+     * @return 是否数字
+     */
     public static boolean isNumber(String s) {
         return s != null && s.matches("^-?\\d+(\\.\\d+)?$");
     }
 
+
+    /**
+     * 处理 SQL 里的 <if test=""> 块
+     *
+     * @param sql         SQL模板
+     * @param paramValues 参数值映射
+     * @return 处理后的 SQL
+     */
     public static String processIfBlocks(String sql, Map<String, ?> paramValues) {
         Pattern ifBlock = Pattern.compile(IF_BLOCK_REGEX, Pattern.DOTALL);
         Matcher matcher = ifBlock.matcher(sql);
@@ -69,6 +96,15 @@ public class SqlParamUtils {
         return sb.toString();
     }
 
+
+    /**
+     * 判断 if test 内的条件是否成立
+     * 只支持 xx != null, xx != '', xx != 0 的多 and 条件
+     *
+     * @param condition   条件表达式
+     * @param paramValues 参数值映射
+     * @return 是否成立
+     */
     public static boolean evalCondition(String condition, Map<String, ?> paramValues) {
         String[] ands = condition.split("and");
         for (String cond : ands) {
@@ -89,6 +125,13 @@ public class SqlParamUtils {
         return true;
     }
 
+    /**
+     * 处理 SQL 里的 <foreach> 块
+     *
+     * @param sql         SQL模板
+     * @param paramValues 参数值映射
+     * @return 处理后的 SQL
+     */
     public static String processForeachBlocks(String sql, Map<String, Object> paramValues) {
         // 这个正则匹配任意顺序的collection和item属性，open,separator,close属性可选，且支持换行和空白
         Pattern foreachPattern = Pattern.compile(
@@ -141,6 +184,12 @@ public class SqlParamUtils {
     }
 
 
+    /**
+     * 处理 <set> 块，自动补全逗号，去除末尾多余逗号
+     *
+     * @param sql SQL模板
+     * @return 处理后的 SQL
+     */
     public static String processSetBlocks(String sql) {
         Pattern setBlock = Pattern.compile(SET_BLOCK_REGEX, Pattern.DOTALL);
         Matcher matcher = setBlock.matcher(sql);

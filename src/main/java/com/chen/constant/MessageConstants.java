@@ -39,6 +39,12 @@ public class MessageConstants {
     public static final String DELETE_SUCCESS_MESSAGE = "数据源配置已删除";
     public static final String DELETE_SUCCESS_TITLE = "删除成功";
     public static final String NO_DB_CONFIG_HTML = "<html><body><h2 style='color:red;'>请先配置或者新增数据库连接！</h2></body></html>";
+    public static final String MESSAGE_SELECT_SQL = "请先选中一段SQL语句";
+    public static final String PARAM_OPTIONAL_LABEL = "（选填）:";
+    public static final String BTN_SQL_CHECK = "SQL执行检查";
+    public static final String BTN_COPY = "复制";
+    public static final String DIALOG_RESULT = "执行计划分析";
+    public static final String COPY_SUCCESS_MSG = "已复制到剪贴板！";
 
 }
 

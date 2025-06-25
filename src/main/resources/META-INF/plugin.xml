@@ -59,24 +59,24 @@ PrettySQL is an IntelliJ plugin that beautifies and formats SQL queries automati
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt H"/>
         </action>
 
-        <!-- SQL 语法检查 -->
-        <action id="CheckSqlAction"
-                class="com.chen.action.CheckSqlAction"
-                text="SQL检查"
-                description="检查SQL语句">
+        <action
+                id="ViewRealSqlAction"
+                class="com.chen.action.ViewRealSqlAction"
+                text="预览实际SQL"
+                description="输入参数，生成并预览实际 SQL"
+                popup="true">
             <add-to-group group-id="SqlToolRootGroup" anchor="after" relative-to-action="PrettySqlAction"/>
-            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt G"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt K"/>
         </action>
-
         <!-- SQL 执行计划分析 -->
         <action id="ExplainSqlAction"
                 class="com.chen.action.ExplainSqlAction"
                 text="执行计划分析"
                 description="使用 EXPLAIN 分析选中的 SQL 语句">
-            <add-to-group group-id="SqlToolRootGroup" anchor="after" relative-to-action="CheckSqlAction"/>
+            <add-to-group group-id="SqlToolRootGroup" anchor="after" relative-to-action="ViewRealSqlAction"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt P"/>
         </action>
-        <!-- SQL 执行计划分析 -->
+        <!-- ER图-->
         <action id="ShowERDiagramAction"
                 class="com.chen.action.ShowERDiagramAction"
                 text="ER图"
@@ -84,7 +84,6 @@ PrettySQL is an IntelliJ plugin that beautifies and formats SQL queries automati
             <add-to-group group-id="SqlToolRootGroup" anchor="after" relative-to-action="ExplainSqlAction"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt Q"/>
         </action>
-
 
         <!-- 二级菜单：数据库配置 -->
         <group id="DbConfigSubGroup"

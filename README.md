@@ -33,6 +33,8 @@
 
 4.选择xml文件里的sql语句右键SQL检查(DML事务不会提交)
 
+5.全面兼容mybatis xml语法自动翻译成真实SQL
+
 
 <div style="display: flex; gap: 15px; align-items: flex-start;">
   <img src="https://znunwm.top/upload/2025/06/ad1161b5-10d4-4b8c-b7d3-a588826859b5.png" width="800" height="600" />

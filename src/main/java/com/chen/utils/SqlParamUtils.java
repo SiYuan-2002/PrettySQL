@@ -1,9 +1,6 @@
 package com.chen.utils;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,6 +43,7 @@ public class SqlParamUtils {
         sql = processIfBlocks(sql, paramValues);
         sql = processForeachBlocks(sql, paramValues);
         sql = processSetBlocks(sql);
+        sql= processWhereTag(sql);
 
         for (Map.Entry<String, Object> entry : paramValues.entrySet()) {
             String key = entry.getKey();
@@ -96,6 +94,33 @@ public class SqlParamUtils {
         return sb.toString();
     }
 
+    /**
+     * 模拟 MyBatis 的 <where> 标签逻辑：
+     * - 去除无用的 <where> 标签
+     * - 自动添加 WHERE
+     * - 移除第一个 AND 或 OR
+     */
+    public static String processWhereTag(String sql) {
+        Pattern pattern = Pattern.compile("<where>(.*?)</where>", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(sql);
+        StringBuffer sb = new StringBuffer();
+
+        while (matcher.find()) {
+            String body = matcher.group(1).trim();
+
+            // 去除最前面的 and / or
+            body = body.replaceFirst("(?i)^\\s*(and|or)\\s+", "");
+
+            if (!body.isEmpty()) {
+                matcher.appendReplacement(sb, "WHERE " + Matcher.quoteReplacement(body));
+            } else {
+                matcher.appendReplacement(sb, "");
+            }
+        }
+
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
 
     /**
      * 判断 if test 内的条件是否成立
@@ -126,53 +151,46 @@ public class SqlParamUtils {
     }
 
     /**
-     * 处理 SQL 里的 <foreach> 块
-     *
-     * @param sql         SQL模板
-     * @param paramValues 参数值映射
-     * @return 处理后的 SQL
+     * 处理带<foreach>的SQL模板，支持弹窗输入userId为单个或逗号分隔的字符串
+     * @param sql SQL模板
+     * @param paramValues 参数map(支持userIds传"1,2,3"或List)
+     * @return 替换后的SQL
      */
     public static String processForeachBlocks(String sql, Map<String, Object> paramValues) {
-        // 这个正则匹配任意顺序的collection和item属性，open,separator,close属性可选，且支持换行和空白
         Pattern foreachPattern = Pattern.compile(
-                "<foreach\\s+([^>]*collection=\"(\\w+)\")[^>]*item=\"(\\w+)\"[^>]*open=\"([^\"]*)\"[^>]*separator=\"([^\"]*)\"[^>]*close=\"([^\"]*)\"[^>]*>([\\s\\S]*?)</foreach>",
+                "<foreach\\s+([^>]*)>([\\s\\S]*?)</foreach>",
                 Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
         Matcher matcher = foreachPattern.matcher(sql);
         StringBuffer sb = new StringBuffer();
-        while (matcher.find()) {
-            String collectionName = matcher.group(2);
-            String itemAlias = matcher.group(3);
-            String open = matcher.group(4);
-            String separator = matcher.group(5);
-            String close = matcher.group(6);
-            String content = matcher.group(7);
 
-            Object collectionObj = paramValues.get(collectionName);
-            if (!(collectionObj instanceof List)) {
-                // 如果不是 List，原样替换不变
-                continue;
-            }
-            List<?> list = (List<?>) collectionObj;
+        while (matcher.find()) {
+            String attrStr = matcher.group(1);
+            String content = matcher.group(2);
+
+            // 只关心item，不判定collection
+            String itemAlias = getAttr(attrStr, "item");
+            String open = getAttr(attrStr, "open", "(");
+            String separator = getAttr(attrStr, "separator", ",");
+            String close = getAttr(attrStr, "close", ")");
+
+            // 只从paramValues取itemAlias
+            Object valueObj = paramValues.get(itemAlias);
+            List<String> list = parseList(valueObj);
+
             StringBuilder fragment = new StringBuilder();
             fragment.append(open);
             for (int i = 0; i < list.size(); i++) {
-                Object item = list.get(i);
+                String val = list.get(i);
                 String itemSql = content;
-
-                if (item instanceof Map) {
-                    for (Map.Entry<?, ?> en : ((Map<?, ?>) item).entrySet()) {
-                        String key = en.getKey().toString();
-                        String val = String.valueOf(en.getValue());
-                        String pattern = "#\\{" + Pattern.quote(itemAlias) + "\\." + Pattern.quote(key) + "}";
-                        itemSql = itemSql.replaceAll(pattern, isNumber(val) ? val : ("'" + val + "'"));
-                    }
-                } else {
-                    String val = item.toString();
-                    String pattern = "#\\{" + Pattern.quote(itemAlias) + "}";
-                    itemSql = itemSql.replaceAll(pattern, isNumber(val) ? val : ("'" + val + "'"));
-                }
-
-                fragment.append(itemSql);
+                itemSql = itemSql.replace(
+                        "#{" + itemAlias + "}",
+                        isNumber(val) ? val : ("'" + val + "'")
+                );
+                itemSql = itemSql.replace(
+                        "${" + itemAlias + "}",
+                        val
+                );
+                fragment.append(itemSql.trim());
                 if (i < list.size() - 1) fragment.append(separator);
             }
             fragment.append(close);
@@ -182,6 +200,38 @@ public class SqlParamUtils {
         matcher.appendTail(sb);
         return sb.toString();
     }
+
+    private static List<String> parseList(Object obj) {
+        if (obj == null) return Collections.emptyList();
+        if (obj instanceof List) {
+            List<?> origin = (List<?>) obj;
+            List<String> ret = new ArrayList<>();
+            for (Object o : origin) ret.add(o == null ? "" : o.toString().trim());
+            return ret;
+        }
+        if (obj instanceof String) {
+            String s = ((String)obj).trim();
+            if (s.isEmpty()) return Collections.emptyList();
+            if (s.contains(",")) {
+                List<String> ret = new ArrayList<>();
+                for (String part : s.split(",")) ret.add(part.trim());
+                return ret;
+            } else {
+                return Collections.singletonList(s);
+            }
+        }
+        return Collections.singletonList(obj.toString().trim());
+    }
+
+    private static String getAttr(String attrStr, String attrName) {
+        return getAttr(attrStr, attrName, "");
+    }
+    private static String getAttr(String attrStr, String attrName, String defaultVal) {
+        Pattern p = Pattern.compile(attrName + "=\"([^\"]*)\"");
+        Matcher m = p.matcher(attrStr);
+        return m.find() ? m.group(1) : defaultVal;
+    }
+
 
 
     /**

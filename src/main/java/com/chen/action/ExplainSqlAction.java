@@ -1,9 +1,11 @@
 package com.chen.action;
 
+import com.chen.dialog.ParamInputDialog;
 import com.chen.entity.DbConfig;
 import com.chen.utils.HtmlViewerUtil;
 import com.chen.utils.JdbcTableInfoUtil;
 import com.chen.utils.SoarYamlUtil;
+import com.chen.utils.SqlParamUtils;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.editor.Editor;
@@ -41,8 +43,27 @@ public class ExplainSqlAction extends AnAction {
             return;
         }
 
+        // 获取 SQL 文本
         SelectionModel selectionModel = editor.getSelectionModel();
-        String sql = selectionModel.getSelectedText();
+        String sqlTmp = selectionModel.getSelectedText();
+        if (sqlTmp == null || sqlTmp.trim().isEmpty()) {
+            Messages.showWarningDialog(project, MESSAGE_SELECT_SQL, DIALOG_TITLE);
+            return;
+        }
+
+        // 解析 SQL 中的参数
+        Set<String> params = SqlParamUtils.extractParams(sqlTmp);
+
+        Map<String, Object> paramValues = Collections.emptyMap();
+        if (!params.isEmpty()) {
+            // 存在参数，弹参数输入框
+            ParamInputDialog paramDialog = new ParamInputDialog(params, project);
+            if (!paramDialog.showAndGet()) return;
+            paramValues = paramDialog.getParamValues();
+        }
+
+        // 生成预览 SQL
+        String sql = SqlParamUtils.buildFinalSql(sqlTmp, paramValues);
         if (sql == null || sql.trim().isEmpty()) {
             sql = editor.getDocument().getText();
         }
